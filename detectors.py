@@ -1,6 +1,6 @@
 from collections import defaultdict
 from statistics import pstdev
-from scapy.all import IP, TCP, UDP, ICMP, ARP
+from scapy.all import IP, TCP, UDP, ICMP, ARP, DNS, DNSQR, Raw
 import pandas as pd
 
 
@@ -44,9 +44,21 @@ def parse_pcap_packets(packets):
         icmp_type = None
         length = len(pkt)
         timestamp = float(pkt.time) if hasattr(pkt, "time") else None
+        app_protocol = "Unknown"
+        dns_query = None
+        dns_rcode = None
+        dns_is_response = None
+        http_method = None
+        http_host = None
+        http_uri = None
+        http_status = None
+        payload_size = 0
+        payload_text = ""
+        payload_hex = ""
 
         if ARP in pkt:
             protocol = "ARP"
+            app_protocol = "ARP"
             src_ip = pkt[ARP].psrc
             dst_ip = pkt[ARP].pdst
 
@@ -55,6 +67,7 @@ def parse_pcap_packets(packets):
                     {
                         "ip": pkt[ARP].psrc,
                         "mac": pkt[ARP].hwsrc,
+                        "timestamp": timestamp,
                     }
                 )
 
@@ -64,21 +77,80 @@ def parse_pcap_packets(packets):
 
             if TCP in pkt:
                 protocol = "TCP"
+                app_protocol = "TCP"
                 src_port = pkt[TCP].sport
                 dst_port = pkt[TCP].dport
                 tcp_flags = str(pkt[TCP].flags)
 
             elif UDP in pkt:
                 protocol = "UDP"
+                app_protocol = "UDP"
                 src_port = pkt[UDP].sport
                 dst_port = pkt[UDP].dport
 
             elif ICMP in pkt:
                 protocol = "ICMP"
+                app_protocol = "ICMP"
                 icmp_type = int(pkt[ICMP].type)
 
             else:
                 protocol = "IP"
+                app_protocol = "IP"
+
+            if DNS in pkt:
+                app_protocol = "DNS"
+                dns_layer = pkt[DNS]
+                dns_is_response = bool(getattr(dns_layer, "qr", 0))
+                dns_rcode = int(getattr(dns_layer, "rcode", 0))
+                if DNSQR in dns_layer:
+                    qname = dns_layer[DNSQR].qname
+                    if isinstance(qname, bytes):
+                        dns_query = qname.decode(errors="replace").rstrip(".")
+                    else:
+                        dns_query = str(qname).rstrip(".")
+
+            if Raw in pkt:
+                raw_payload = bytes(pkt[Raw].load)
+                payload_size = len(raw_payload)
+                payload_text = raw_payload[:512].decode(errors="replace")
+                payload_hex = raw_payload[:256].hex()
+
+                if protocol == "TCP":
+                    text = payload_text
+                    upper_text = text.upper()
+                    http_methods = (
+                        "GET ",
+                        "POST ",
+                        "PUT ",
+                        "DELETE ",
+                        "HEAD ",
+                        "OPTIONS ",
+                        "PATCH ",
+                    )
+
+                    if any(upper_text.startswith(method) for method in http_methods):
+                        app_protocol = "HTTP"
+                        first_line = text.splitlines()[0] if text.splitlines() else ""
+                        parts = first_line.split(" ")
+                        if len(parts) >= 2:
+                            http_method = parts[0]
+                            http_uri = parts[1]
+
+                        for line in text.splitlines():
+                            if line.lower().startswith("host:"):
+                                http_host = line.split(":", 1)[1].strip()
+                                break
+
+                    elif upper_text.startswith("HTTP/"):
+                        app_protocol = "HTTP"
+                        first_line = text.splitlines()[0] if text.splitlines() else ""
+                        parts = first_line.split(" ")
+                        if len(parts) >= 2:
+                            http_status = parts[1]
+                    elif src_port == 443 or dst_port == 443:
+                        app_protocol = "HTTPS"
+                    elif src_port in (80, 8080, 8000) or dst_port in (80, 8080, 8000):
+                        app_protocol = "HTTP"
 
         packets_data.append(
             {
@@ -92,10 +164,161 @@ def parse_pcap_packets(packets):
                 "tcp_flags": tcp_flags,
                 "icmp_type": icmp_type,
                 "length": length,
+                "app_protocol": app_protocol,
+                "dns_query": dns_query,
+                "dns_rcode": dns_rcode,
+                "dns_is_response": dns_is_response,
+                "http_method": http_method,
+                "http_host": http_host,
+                "http_uri": http_uri,
+                "http_status": http_status,
+                "payload_size": payload_size,
+                "payload_text": payload_text,
+                "payload_hex": payload_hex,
             }
         )
 
     return packets_data, arp_records
+
+
+def reconstruct_sessions(df, inactivity_timeout=60.0):
+    if df.empty:
+        return df.copy(), pd.DataFrame()
+
+    session_df = df.copy()
+    session_df["session_id"] = None
+    session_df["conversation_key"] = None
+    session_df["stream_direction"] = None
+
+    sortable_df = session_df.copy()
+    sortable_df["sort_ts"] = sortable_df["timestamp"].fillna(-1)
+    sortable_df = sortable_df.sort_values(by=["sort_ts", "packet_no"])
+
+    active_conversations = {}
+    session_records = {}
+    session_counter = 0
+
+    for idx, row in sortable_df.iterrows():
+        protocol = row.get("protocol")
+        src_ip = row.get("src_ip")
+        dst_ip = row.get("dst_ip")
+        src_port = row.get("src_port")
+        dst_port = row.get("dst_port")
+        timestamp = row.get("timestamp")
+        length = int(row.get("length", 0))
+        app_protocol = row.get("app_protocol", "Unknown")
+        tcp_flags = row.get("tcp_flags")
+
+        valid_ports = pd.notna(src_port) and pd.notna(dst_port)
+        valid_hosts = src_ip != "N/A" and dst_ip != "N/A"
+        if protocol not in ("TCP", "UDP") or not valid_ports or not valid_hosts:
+            continue
+
+        endpoint_a = (str(src_ip), int(src_port))
+        endpoint_b = (str(dst_ip), int(dst_port))
+        if endpoint_a <= endpoint_b:
+            canonical_a = endpoint_a
+            canonical_b = endpoint_b
+            direction = "A->B"
+        else:
+            canonical_a = endpoint_b
+            canonical_b = endpoint_a
+            direction = "B->A"
+
+        conversation_key = (
+            f"{protocol}:{canonical_a[0]}:{canonical_a[1]}"
+            f"<->{canonical_b[0]}:{canonical_b[1]}"
+        )
+
+        session_id = None
+        if conversation_key in active_conversations:
+            current_session_id = active_conversations[conversation_key]
+            last_seen = session_records[current_session_id]["last_seen"]
+            if timestamp is None or last_seen is None:
+                session_id = current_session_id
+            elif float(timestamp) - float(last_seen) <= float(inactivity_timeout):
+                session_id = current_session_id
+
+        if session_id is None:
+            session_counter += 1
+            session_id = f"S{session_counter:05d}"
+            session_records[session_id] = {
+                "session_id": session_id,
+                "protocol": protocol,
+                "conversation_key": conversation_key,
+                "endpoint_a_ip": canonical_a[0],
+                "endpoint_a_port": canonical_a[1],
+                "endpoint_b_ip": canonical_b[0],
+                "endpoint_b_port": canonical_b[1],
+                "start_ts": timestamp,
+                "end_ts": timestamp,
+                "last_seen": timestamp,
+                "total_packets": 0,
+                "total_bytes": 0,
+                "a_to_b_packets": 0,
+                "b_to_a_packets": 0,
+                "a_to_b_bytes": 0,
+                "b_to_a_bytes": 0,
+                "app_protocols": set(),
+                "tcp_flags_seen": set(),
+            }
+            active_conversations[conversation_key] = session_id
+
+        session_df.at[idx, "session_id"] = session_id
+        session_df.at[idx, "conversation_key"] = conversation_key
+        session_df.at[idx, "stream_direction"] = direction
+
+        record = session_records[session_id]
+        record["total_packets"] += 1
+        record["total_bytes"] += length
+        record["end_ts"] = timestamp
+        record["last_seen"] = timestamp
+        if direction == "A->B":
+            record["a_to_b_packets"] += 1
+            record["a_to_b_bytes"] += length
+        else:
+            record["b_to_a_packets"] += 1
+            record["b_to_a_bytes"] += length
+        if isinstance(app_protocol, str) and app_protocol:
+            record["app_protocols"].add(app_protocol)
+        if pd.notna(tcp_flags):
+            record["tcp_flags_seen"].add(str(tcp_flags))
+
+    sessions = []
+    for data in session_records.values():
+        start_ts = data["start_ts"]
+        end_ts = data["end_ts"]
+        duration_sec = None
+        if start_ts is not None and end_ts is not None:
+            duration_sec = max(0.0, float(end_ts) - float(start_ts))
+
+        sessions.append(
+            {
+                "session_id": data["session_id"],
+                "protocol": data["protocol"],
+                "conversation_key": data["conversation_key"],
+                "endpoint_a": f"{data['endpoint_a_ip']}:{data['endpoint_a_port']}",
+                "endpoint_b": f"{data['endpoint_b_ip']}:{data['endpoint_b_port']}",
+                "start_ts": start_ts,
+                "end_ts": end_ts,
+                "duration_sec": round(duration_sec, 3) if duration_sec is not None else None,
+                "total_packets": data["total_packets"],
+                "total_bytes": data["total_bytes"],
+                "a_to_b_packets": data["a_to_b_packets"],
+                "b_to_a_packets": data["b_to_a_packets"],
+                "a_to_b_bytes": data["a_to_b_bytes"],
+                "b_to_a_bytes": data["b_to_a_bytes"],
+                "app_protocols": ", ".join(sorted(data["app_protocols"])),
+                "tcp_flags_seen": ", ".join(sorted(data["tcp_flags_seen"])),
+            }
+        )
+
+    sessions_df = pd.DataFrame(sessions).sort_values(
+        by=["total_packets", "total_bytes"],
+        ascending=False,
+    ) if sessions else pd.DataFrame()
+
+    return session_df, sessions_df
 
 
 def get_traffic_summary(df):
