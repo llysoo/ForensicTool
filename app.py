@@ -4,6 +4,8 @@ import time
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+from datetime import datetime
 from scapy.all import rdpcap, get_if_list, sniff, wrpcap
 
 from detectors import (
@@ -61,9 +63,34 @@ st.markdown(
 st.title("NetSleuth IR")
 st.subheader("Incident Response Packet Analyzer")
 
+
+# ──────────────────────────────────────────────
+# FIX 1: Human-readable timestamp helper
+# ──────────────────────────────────────────────
+def format_timestamp(ts):
+    """Convert a raw Unix float timestamp to a readable datetime string."""
+    if ts is None or (isinstance(ts, float) and ts != ts):  # NaN check
+        return "N/A"
+    try:
+        return datetime.utcfromtimestamp(float(ts)).strftime("%Y-%m-%d %H:%M:%S UTC")
+    except Exception:
+        return str(ts)
+
+
+def humanize_timestamps(df):
+    """Return a copy of df with the timestamp column formatted as readable strings."""
+    df2 = df.copy()
+    if "timestamp" in df2.columns:
+        df2["timestamp"] = df2["timestamp"].apply(format_timestamp)
+    # Also convert start_ts / end_ts if present (sessions table)
+    for col in ("start_ts", "end_ts"):
+        if col in df2.columns:
+            df2[col] = df2[col].apply(format_timestamp)
+    return df2
+
+
 def show_status(title, has_detection, clear_text, detected_text):
     st.markdown(f"<div class='section-title'>{title}</div>", unsafe_allow_html=True)
-
     if has_detection:
         st.markdown(
             f"<div class='status-box status-detected'>{detected_text}</div>",
@@ -78,7 +105,6 @@ def show_status(title, has_detection, clear_text, detected_text):
 
 def build_bpf_filter(protocols, ip_value, port_value, custom_filter):
     parts = []
-
     if protocols:
         proto_clauses = []
         for proto in protocols:
@@ -89,16 +115,12 @@ def build_bpf_filter(protocols, ip_value, port_value, custom_filter):
             else:
                 proto_clauses.append(proto)
         parts.append("(" + " or ".join(proto_clauses) + ")")
-
     if ip_value:
         parts.append(f"host {ip_value.strip()}")
-
     if port_value:
         parts.append(f"port {int(port_value)}")
-
     if custom_filter:
         parts.append(f"({custom_filter.strip()})")
-
     return " and ".join(parts).strip()
 
 
@@ -114,43 +136,38 @@ def apply_packet_search_filters(
     timestamp_max,
 ):
     filtered = df.copy()
-
     if src_ip_query.strip():
         filtered = filtered[
             filtered["src_ip"].astype(str).str.contains(src_ip_query.strip(), case=False, na=False)
         ]
-
     if dst_ip_query.strip():
         filtered = filtered[
             filtered["dst_ip"].astype(str).str.contains(dst_ip_query.strip(), case=False, na=False)
         ]
-
     if packet_protocols:
         filtered = filtered[filtered["protocol"].isin(packet_protocols)]
-
     if app_protocols:
         filtered = filtered[filtered["app_protocol"].isin(app_protocols)]
-
     if port_query:
         filtered = filtered[
             (filtered["src_port"] == int(port_query)) | (filtered["dst_port"] == int(port_query))
         ]
-
     if payload_query.strip():
         filtered = filtered[
             filtered["payload_text"].astype(str).str.contains(payload_query.strip(), case=False, na=False)
         ]
-
     if timestamp_min is not None and timestamp_max is not None:
         filtered = filtered[
             filtered["timestamp"].notna()
             & (filtered["timestamp"] >= float(timestamp_min))
             & (filtered["timestamp"] <= float(timestamp_max))
         ]
-
     return filtered
 
 
+# ──────────────────────────────────────────────
+# FIX 2: Corrected severity enrichment thresholds
+# ──────────────────────────────────────────────
 def enrich_alert_severity(alert):
     enriched = dict(alert)
     alert_type = str(enriched.get("alert_type", "")).lower()
@@ -160,8 +177,14 @@ def enrich_alert_severity(alert):
         severity = "Critical"
     elif "data exfiltration" in alert_type and int(enriched.get("total_bytes_sent", 0)) >= 100000:
         severity = "Critical"
-    elif "port scanning" in alert_type and int(enriched.get("unique_dst_ports", 0)) >= 20:
-        severity = "High"
+    elif "port scanning" in alert_type:
+        ports = int(enriched.get("unique_dst_ports", 0))
+        if ports >= 100:
+            severity = "Critical"
+        elif ports >= 20:
+            severity = "High"
+        else:
+            severity = "Medium"
     elif "icmp flood" in alert_type and int(enriched.get("icmp_count", 0)) >= 50:
         severity = "High"
 
@@ -171,7 +194,6 @@ def enrich_alert_severity(alert):
 
 def run_detection_pipeline(df, arp_records):
     findings = []
-
     findings.extend(detect_port_scanning(df, port_threshold=5))
     findings.extend(detect_arp_spoofing(arp_records))
     findings.extend(detect_ddos(df, source_threshold=20, packet_threshold=50))
@@ -187,7 +209,6 @@ def run_detection_pipeline(df, arp_records):
     findings.extend(detect_icmp_flood(df, icmp_threshold=3))
     findings.extend(detect_icmp_sweep(df, target_threshold=5))
     findings.extend(detect_large_packets(df, size_threshold=1000))
-
     return [enrich_alert_severity(item) for item in findings]
 
 
@@ -202,26 +223,18 @@ def get_alert_key(alert):
     )
 
 
-def update_realtime_alert_state(
-    findings,
-    now_ts,
-    cooldown_sec=30,
-    resolve_after_sec=30,
-):
+def update_realtime_alert_state(findings, now_ts, cooldown_sec=30, resolve_after_sec=30):
     state = st.session_state["rt_alert_state"]
     feed = st.session_state["rt_alert_feed"]
     last_notified = st.session_state["rt_last_notified"]
-
     current_keys = set()
 
     for finding in findings:
         key = get_alert_key(finding)
         current_keys.add(key)
-
         prev = state.get(key)
         first_seen = now_ts if prev is None else prev.get("first_seen", now_ts)
         status = "new" if prev is None or prev.get("status") == "resolved" else "ongoing"
-
         record = {
             **finding,
             "alert_key": key,
@@ -230,7 +243,6 @@ def update_realtime_alert_state(
             "last_seen": now_ts,
         }
         state[key] = record
-
         can_notify = now_ts - float(last_notified.get(key, 0)) >= float(cooldown_sec)
         if status == "new" and can_notify:
             last_notified[key] = now_ts
@@ -250,10 +262,8 @@ def update_realtime_alert_state(
     for key, record in list(state.items()):
         if key in current_keys:
             continue
-
         if record.get("status") == "resolved":
             continue
-
         stale_for = now_ts - float(record.get("last_seen", now_ts))
         if stale_for >= float(resolve_after_sec):
             record["status"] = "resolved"
@@ -274,6 +284,96 @@ def update_realtime_alert_state(
                 )
 
     st.session_state["rt_alert_feed"] = feed[:300]
+
+
+# ──────────────────────────────────────────────
+# FIX 3: Findings visualization charts
+# ──────────────────────────────────────────────
+SEVERITY_COLORS = {
+    "Critical": "#b71c1c",
+    "High":     "#e65100",
+    "Medium":   "#f9a825",
+    "Low":      "#2e7d32",
+}
+
+SEVERITY_ORDER = ["Critical", "High", "Medium", "Low"]
+
+
+def render_findings_charts(findings):
+    """Render three charts summarizing the findings."""
+    findings_df = pd.DataFrame(findings)
+
+    st.markdown("## Findings Overview")
+    chart_col1, chart_col2 = st.columns(2)
+
+    # ── Chart 1: Alerts by Type (horizontal bar) ──
+    with chart_col1:
+        st.markdown("### Alerts by Type")
+        type_counts = findings_df["alert_type"].value_counts()
+        fig1, ax1 = plt.subplots(figsize=(5, max(2.5, len(type_counts) * 0.55)))
+        bars = ax1.barh(type_counts.index[::-1], type_counts.values[::-1], color="#1565c0", height=0.6)
+        ax1.bar_label(bars, padding=4, fontsize=9)
+        ax1.set_xlabel("Count", fontsize=9)
+        ax1.tick_params(axis="y", labelsize=9)
+        ax1.spines[["top", "right"]].set_visible(False)
+        ax1.set_xlim(0, type_counts.max() * 1.25)
+        plt.tight_layout()
+        st.pyplot(fig1)
+        plt.close(fig1)
+
+    # ── Chart 2: Alerts by Severity (colour-coded bar) ──
+    with chart_col2:
+        st.markdown("### Alerts by Severity")
+        sev_counts = findings_df["severity"].value_counts()
+        ordered = [s for s in SEVERITY_ORDER if s in sev_counts.index]
+        values  = [sev_counts[s] for s in ordered]
+        colors  = [SEVERITY_COLORS.get(s, "#888") for s in ordered]
+
+        fig2, ax2 = plt.subplots(figsize=(5, 2.8))
+        bars2 = ax2.bar(ordered, values, color=colors, width=0.5)
+        ax2.bar_label(bars2, padding=3, fontsize=9)
+        ax2.set_ylabel("Count", fontsize=9)
+        ax2.tick_params(axis="x", labelsize=9)
+        ax2.spines[["top", "right"]].set_visible(False)
+        ax2.set_ylim(0, max(values) * 1.3)
+        plt.tight_layout()
+        st.pyplot(fig2)
+        plt.close(fig2)
+
+    # ── Chart 3: Top offending source IPs ──
+    if "src_ip" in findings_df.columns:
+        ip_col = findings_df["src_ip"].fillna(
+            findings_df.get("ip", pd.Series(dtype=str))
+        )
+        ip_counts = ip_col[ip_col != "N/A"].value_counts().head(8)
+
+        if not ip_counts.empty:
+            st.markdown("### Top Offending Source IPs")
+            fig3, ax3 = plt.subplots(figsize=(8, max(2.5, len(ip_counts) * 0.55)))
+            bars3 = ax3.barh(ip_counts.index[::-1], ip_counts.values[::-1], color="#c62828", height=0.6)
+            ax3.bar_label(bars3, padding=4, fontsize=9)
+            ax3.set_xlabel("Alert Count", fontsize=9)
+            ax3.tick_params(axis="y", labelsize=9)
+            ax3.spines[["top", "right"]].set_visible(False)
+            ax3.set_xlim(0, ip_counts.max() * 1.25)
+            plt.tight_layout()
+            st.pyplot(fig3)
+            plt.close(fig3)
+
+    # ── Legend for severity colours ──
+    patches = [
+        mpatches.Patch(color=SEVERITY_COLORS[s], label=s)
+        for s in SEVERITY_ORDER
+        if s in findings_df.get("severity", pd.Series(dtype=str)).values
+    ]
+    if patches:
+        fig_leg, ax_leg = plt.subplots(figsize=(4, 0.4))
+        ax_leg.axis("off")
+        ax_leg.legend(handles=patches, loc="center", ncol=len(patches),
+                      frameon=False, fontsize=9)
+        plt.tight_layout()
+        st.pyplot(fig_leg)
+        plt.close(fig_leg)
 
 
 def analyze_packets(packets):
@@ -318,9 +418,9 @@ def analyze_packets(packets):
     ax.set_ylabel("Count")
     ax.set_title("Protocol Distribution")
     st.pyplot(fig)
+    plt.close(fig)
 
     left, right = st.columns(2)
-
     with left:
         st.markdown("### Top Source IPs")
         top_src = (
@@ -343,7 +443,7 @@ def analyze_packets(packets):
         top_dst.columns = ["Destination IP", "Count"]
         st.dataframe(top_dst, use_container_width=True)
 
-    dns_df = df[df["app_protocol"] == "DNS"].copy()
+    dns_df  = df[df["app_protocol"] == "DNS"].copy()
     http_df = df[df["app_protocol"] == "HTTP"].copy()
 
     st.markdown("## Deep Protocol Insights")
@@ -374,23 +474,26 @@ def analyze_packets(packets):
         sess_col1.metric("Reconstructed Sessions", len(sessions_df))
         sess_col2.metric("TCP Sessions", int((sessions_df["protocol"] == "TCP").sum()))
         sess_col3.metric("UDP Sessions", int((sessions_df["protocol"] == "UDP").sum()))
-        st.dataframe(sessions_df.head(200), use_container_width=True)
+        # FIX 1 applied: show human-readable timestamps in sessions table
+        st.dataframe(humanize_timestamps(sessions_df).head(200), use_container_width=True)
 
     st.markdown("## Detection Results")
 
-    portscan_results = detect_port_scanning(df, port_threshold=5)
-    arp_results = detect_arp_spoofing(arp_records)
-    ddos_results = detect_ddos(df, source_threshold=20, packet_threshold=50)
-    beacon_results = detect_beaconing(df, min_connections=4, interval_tolerance=2.0)
-    outbound_results = detect_unusual_outbound_connections(
-        df,
-        external_host_threshold=3,
-        packet_threshold=5,
-    )
-    exfil_results = detect_data_exfiltration(df, byte_threshold=10000)
-    icmp_results = detect_icmp_flood(df, icmp_threshold=3)
+    portscan_results  = detect_port_scanning(df, port_threshold=5)
+    arp_results       = detect_arp_spoofing(arp_records)
+    ddos_results      = detect_ddos(df, source_threshold=20, packet_threshold=50)
+    beacon_results    = detect_beaconing(df, min_connections=4, interval_tolerance=2.0)
+    outbound_results  = detect_unusual_outbound_connections(df, external_host_threshold=3, packet_threshold=5)
+    exfil_results     = detect_data_exfiltration(df, byte_threshold=10000)
+    icmp_results      = detect_icmp_flood(df, icmp_threshold=3)
     icmp_sweep_results = detect_icmp_sweep(df, target_threshold=5)
     large_packet_results = detect_large_packets(df, size_threshold=1000)
+
+    # Apply FIX 2 severity enrichment to each detector's results
+    portscan_results     = [enrich_alert_severity(r) for r in portscan_results]
+    ddos_results         = [enrich_alert_severity(r) for r in ddos_results]
+    exfil_results        = [enrich_alert_severity(r) for r in exfil_results]
+    icmp_results         = [enrich_alert_severity(r) for r in icmp_results]
 
     findings = []
 
@@ -402,8 +505,7 @@ def analyze_packets(packets):
         "Detected: Possible port scanning activity found.",
     )
     if portscan_results:
-        portscan_df = pd.DataFrame(portscan_results)
-        st.dataframe(portscan_df, use_container_width=True)
+        st.dataframe(pd.DataFrame(portscan_results), use_container_width=True)
         findings.extend(portscan_results)
 
     # ARP Spoofing
@@ -414,8 +516,7 @@ def analyze_packets(packets):
         "Detected: Possible ARP spoofing activity found.",
     )
     if arp_results:
-        arp_df = pd.DataFrame(arp_results)
-        st.dataframe(arp_df, use_container_width=True)
+        st.dataframe(pd.DataFrame(arp_results), use_container_width=True)
         findings.extend(arp_results)
 
     # DDoS
@@ -426,8 +527,7 @@ def analyze_packets(packets):
         "Detected: Possible DDoS-like traffic found.",
     )
     if ddos_results:
-        ddos_df = pd.DataFrame(ddos_results)
-        st.dataframe(ddos_df, use_container_width=True)
+        st.dataframe(pd.DataFrame(ddos_results), use_container_width=True)
         findings.extend(ddos_results)
 
     # Beaconing
@@ -438,8 +538,7 @@ def analyze_packets(packets):
         "Detected: Possible beaconing activity found.",
     )
     if beacon_results:
-        beacon_df = pd.DataFrame(beacon_results)
-        st.dataframe(beacon_df, use_container_width=True)
+        st.dataframe(pd.DataFrame(beacon_results), use_container_width=True)
         findings.extend(beacon_results)
 
     # Unusual Outbound
@@ -450,8 +549,7 @@ def analyze_packets(packets):
         "Detected: Possible unusual outbound connections found.",
     )
     if outbound_results:
-        outbound_df = pd.DataFrame(outbound_results)
-        st.dataframe(outbound_df, use_container_width=True)
+        st.dataframe(pd.DataFrame(outbound_results), use_container_width=True)
         findings.extend(outbound_results)
 
     # Data Exfiltration
@@ -462,8 +560,7 @@ def analyze_packets(packets):
         "Detected: Possible data exfiltration activity found.",
     )
     if exfil_results:
-        exfil_df = pd.DataFrame(exfil_results)
-        st.dataframe(exfil_df, use_container_width=True)
+        st.dataframe(pd.DataFrame(exfil_results), use_container_width=True)
         findings.extend(exfil_results)
 
     # ICMP Flood
@@ -474,8 +571,7 @@ def analyze_packets(packets):
         "Detected: Possible ICMP flood activity found.",
     )
     if icmp_results:
-        icmp_df = pd.DataFrame(icmp_results)
-        st.dataframe(icmp_df, use_container_width=True)
+        st.dataframe(pd.DataFrame(icmp_results), use_container_width=True)
         findings.extend(icmp_results)
 
     # ICMP Sweep
@@ -486,8 +582,7 @@ def analyze_packets(packets):
         "Detected: Possible ICMP sweep activity found.",
     )
     if icmp_sweep_results:
-        icmp_sweep_df = pd.DataFrame(icmp_sweep_results)
-        st.dataframe(icmp_sweep_df, use_container_width=True)
+        st.dataframe(pd.DataFrame(icmp_sweep_results), use_container_width=True)
         findings.extend(icmp_sweep_results)
 
     # Large Packets
@@ -498,15 +593,17 @@ def analyze_packets(packets):
         "Detected: Large packets found.",
     )
     if large_packet_results:
-        large_df = pd.DataFrame(large_packet_results[:20])
-        st.dataframe(large_df, use_container_width=True)
+        st.dataframe(pd.DataFrame(large_packet_results[:20]), use_container_width=True)
         findings.extend(large_packet_results)
+
+    # ── FIX 3: Findings visualization charts (before the raw table) ──
+    if findings:
+        render_findings_charts(findings)
 
     st.markdown("## Findings Report")
     if findings:
         findings_df = pd.DataFrame(findings)
         st.dataframe(findings_df, use_container_width=True)
-
         csv = findings_df.to_csv(index=False).encode("utf-8")
         st.download_button(
             label="Download Findings Report as CSV",
@@ -521,7 +618,8 @@ def analyze_packets(packets):
         )
 
     st.markdown("## Parsed Packet Data")
-    st.dataframe(df.head(200), use_container_width=True)
+    # FIX 1 applied: human-readable timestamps in parsed packet table
+    st.dataframe(humanize_timestamps(df).head(200), use_container_width=True)
 
     st.markdown("## Investigation Tools")
     with st.expander("Packet Search & Filtering", expanded=True):
@@ -529,12 +627,8 @@ def analyze_packets(packets):
 
         src_ip_query = fcol1.text_input("Source IP contains", value="")
         dst_ip_query = fcol2.text_input("Destination IP contains", value="")
-        port_query = fcol3.number_input(
-            "Port equals (optional)",
-            min_value=0,
-            max_value=65535,
-            value=0,
-            step=1,
+        port_query   = fcol3.number_input(
+            "Port equals (optional)", min_value=0, max_value=65535, value=0, step=1,
         )
 
         packet_protocols = st.multiselect(
@@ -561,7 +655,13 @@ def analyze_packets(packets):
                     min_value=min_ts,
                     max_value=max_ts,
                     value=(min_ts, max_ts),
+                    format="%.2f",
+                    help="Drag to filter packets by time. Hover to see Unix timestamp.",
                 )
+                # Show human-readable labels below the slider
+                sl_col1, sl_col2 = st.columns(2)
+                sl_col1.caption(f"From: {format_timestamp(ts_min)}")
+                sl_col2.caption(f"To:   {format_timestamp(ts_max)}")
             else:
                 ts_min, ts_max = min_ts, max_ts
 
@@ -578,7 +678,8 @@ def analyze_packets(packets):
         )
 
         st.write(f"Matching packets: {len(searched_df)}")
-        st.dataframe(searched_df.head(500), use_container_width=True)
+        # FIX 1 applied: human-readable timestamps in search results
+        st.dataframe(humanize_timestamps(searched_df).head(500), use_container_width=True)
 
     with st.expander("Payload Inspection", expanded=False):
         payload_candidates = searched_df if "searched_df" in locals() else df
@@ -601,6 +702,8 @@ def analyze_packets(packets):
                 f"{selected_row['src_ip']}:{selected_row['src_port']} -> "
                 f"{selected_row['dst_ip']}:{selected_row['dst_port']}",
             )
+            # FIX 1: show readable timestamp for selected packet
+            st.write("Timestamp:", format_timestamp(selected_row.get("timestamp")))
             st.write("App protocol:", selected_row.get("app_protocol", "Unknown"))
             st.write("Payload size:", int(selected_row.get("payload_size", 0)), "bytes")
             st.text_area(
@@ -640,7 +743,10 @@ def analyze_packets(packets):
             stream_df = stream_df.sort_values(by=["timestamp", "packet_no"])
             stream_payload_rows = stream_df[stream_df["payload_size"] > 0][
                 ["packet_no", "timestamp", "src_ip", "src_port", "dst_ip", "dst_port", "payload_text"]
-            ]
+            ].copy()
+
+            # FIX 1: human-readable timestamps in stream view
+            stream_payload_rows["timestamp"] = stream_payload_rows["timestamp"].apply(format_timestamp)
 
             if stream_payload_rows.empty:
                 st.caption("No payload data available in the selected stream/direction.")
@@ -659,26 +765,21 @@ def analyze_packets(packets):
                 st.text_area("Reassembled Stream View (text)", value=combined_text, height=260)
 
 
-if "captured_packets" not in st.session_state:
-    st.session_state["captured_packets"] = None
-if "captured_pcap_bytes" not in st.session_state:
-    st.session_state["captured_pcap_bytes"] = None
-if "captured_meta" not in st.session_state:
-    st.session_state["captured_meta"] = {}
-if "rt_monitoring" not in st.session_state:
-    st.session_state["rt_monitoring"] = False
-if "rt_packet_rows" not in st.session_state:
-    st.session_state["rt_packet_rows"] = []
-if "rt_arp_records" not in st.session_state:
-    st.session_state["rt_arp_records"] = []
-if "rt_alert_state" not in st.session_state:
-    st.session_state["rt_alert_state"] = {}
-if "rt_alert_feed" not in st.session_state:
-    st.session_state["rt_alert_feed"] = []
-if "rt_last_notified" not in st.session_state:
-    st.session_state["rt_last_notified"] = {}
-if "rt_config" not in st.session_state:
-    st.session_state["rt_config"] = {}
+# ── Session state init ──
+for key, default in {
+    "captured_packets": None,
+    "captured_pcap_bytes": None,
+    "captured_meta": {},
+    "rt_monitoring": False,
+    "rt_packet_rows": [],
+    "rt_arp_records": [],
+    "rt_alert_state": {},
+    "rt_alert_feed": [],
+    "rt_last_notified": {},
+    "rt_config": {},
+}.items():
+    if key not in st.session_state:
+        st.session_state[key] = default
 
 input_mode = st.radio(
     "Choose Traffic Source",
@@ -732,49 +833,24 @@ else:
 
     col1, col2 = st.columns(2)
     capture_seconds = col1.number_input(
-        "Capture duration (seconds)",
-        min_value=1,
-        max_value=300,
-        value=10,
-        step=1,
+        "Capture duration (seconds)", min_value=1, max_value=300, value=10, step=1,
     )
     packet_limit = col2.number_input(
-        "Max packets (0 = unlimited)",
-        min_value=0,
-        max_value=100000,
-        value=500,
-        step=50,
+        "Max packets (0 = unlimited)", min_value=0, max_value=100000, value=500, step=50,
     )
 
     st.markdown("#### Capture Filters")
     f1, f2, f3 = st.columns(3)
     protocol_filter = f1.multiselect(
-        "Protocol filter",
-        ["tcp", "udp", "icmp", "arp", "dns", "http"],
-        default=[],
+        "Protocol filter", ["tcp", "udp", "icmp", "arp", "dns", "http"], default=[],
     )
-    ip_filter = f2.text_input(
-        "IP/Host filter",
-        value="",
-        placeholder="e.g. 192.168.1.5",
-    )
-    port_filter = f3.number_input(
-        "Port filter",
-        min_value=0,
-        max_value=65535,
-        value=0,
-        step=1,
-    )
+    ip_filter    = f2.text_input("IP/Host filter", value="", placeholder="e.g. 192.168.1.5")
+    port_filter  = f3.number_input("Port filter", min_value=0, max_value=65535, value=0, step=1)
 
-    capture_filter = st.text_input(
-        "Custom BPF filter (optional)",
-        placeholder="e.g. tcp and port 443",
-    )
+    capture_filter = st.text_input("Custom BPF filter (optional)", placeholder="e.g. tcp and port 443")
     final_capture_filter = build_bpf_filter(
-        protocols=protocol_filter,
-        ip_value=ip_filter,
-        port_value=port_filter,
-        custom_filter=capture_filter,
+        protocols=protocol_filter, ip_value=ip_filter,
+        port_value=port_filter, custom_filter=capture_filter,
     )
     st.caption(
         f"Effective filter: {final_capture_filter if final_capture_filter else 'None (capture all traffic)'}"
@@ -787,14 +863,9 @@ else:
             st.error("No network interface is available for live capture.")
         else:
             try:
-                sniff_kwargs = {
-                    "iface": selected_interface,
-                    "timeout": int(capture_seconds),
-                }
-
+                sniff_kwargs = {"iface": selected_interface, "timeout": int(capture_seconds)}
                 if int(packet_limit) > 0:
                     sniff_kwargs["count"] = int(packet_limit)
-
                 if final_capture_filter:
                     sniff_kwargs["filter"] = final_capture_filter
 
@@ -808,16 +879,14 @@ else:
                     "packet_count": len(captured_packets),
                     "filter": final_capture_filter or "None",
                 }
-
                 st.session_state["captured_pcap_bytes"] = None
+
                 if save_capture and len(captured_packets) > 0:
                     with tempfile.NamedTemporaryFile(delete=False, suffix=".pcap") as tmp:
                         temp_capture_path = tmp.name
-
                     wrpcap(temp_capture_path, captured_packets)
                     with open(temp_capture_path, "rb") as pcap_file:
                         st.session_state["captured_pcap_bytes"] = pcap_file.read()
-
                     try:
                         os.remove(temp_capture_path)
                     except OSError:
@@ -846,7 +915,6 @@ else:
                 file_name="netsleuth_live_capture.pcap",
                 mime="application/vnd.tcpdump.pcap",
             )
-
         packets_to_analyze = st.session_state["captured_packets"]
     else:
         st.info("Configure live capture options, then click 'Start Live Capture'.")
@@ -858,41 +926,20 @@ else:
     )
 
     rt_col1, rt_col2, rt_col3 = st.columns(3)
-    rt_poll_seconds = rt_col1.number_input(
-        "Polling interval (seconds)",
-        min_value=1,
-        max_value=10,
-        value=2,
-        step=1,
-        key="rt_poll_seconds",
-    )
-    rt_window_seconds = rt_col2.number_input(
-        "Analysis window (seconds)",
-        min_value=10,
-        max_value=300,
-        value=30,
-        step=5,
-        key="rt_window_seconds",
-    )
-    rt_cooldown_seconds = rt_col3.number_input(
-        "Alert cooldown (seconds)",
-        min_value=5,
-        max_value=180,
-        value=30,
-        step=5,
-        key="rt_cooldown_seconds",
-    )
+    rt_poll_seconds    = rt_col1.number_input("Polling interval (seconds)",  min_value=1, max_value=10,  value=2,  step=1,  key="rt_poll_seconds")
+    rt_window_seconds  = rt_col2.number_input("Analysis window (seconds)",   min_value=10, max_value=300, value=30, step=5,  key="rt_window_seconds")
+    rt_cooldown_seconds = rt_col3.number_input("Alert cooldown (seconds)",   min_value=5, max_value=180, value=30, step=5,  key="rt_cooldown_seconds")
 
     rt_controls_left, rt_controls_right = st.columns(2)
     start_rt = rt_controls_left.button("Start Real-Time Monitoring", type="primary")
-    stop_rt = rt_controls_right.button("Stop Real-Time Monitoring")
+    stop_rt  = rt_controls_right.button("Stop Real-Time Monitoring")
 
     if start_rt:
-        st.session_state["rt_monitoring"] = True
-        st.session_state["rt_packet_rows"] = []
-        st.session_state["rt_arp_records"] = []
-        st.session_state["rt_alert_state"] = {}
-        st.session_state["rt_alert_feed"] = []
+        st.session_state["rt_monitoring"]    = True
+        st.session_state["rt_packet_rows"]   = []
+        st.session_state["rt_arp_records"]   = []
+        st.session_state["rt_alert_state"]   = {}
+        st.session_state["rt_alert_feed"]    = []
         st.session_state["rt_last_notified"] = {}
         st.session_state["rt_config"] = {
             "interface": selected_interface,
@@ -936,24 +983,16 @@ else:
 
             cutoff = now_ts - float(rt_config["window_seconds"])
             st.session_state["rt_packet_rows"] = [
-                row
-                for row in st.session_state["rt_packet_rows"]
+                row for row in st.session_state["rt_packet_rows"]
                 if row.get("timestamp") is None or float(row.get("timestamp", now_ts)) >= cutoff
             ]
             st.session_state["rt_arp_records"] = [
-                row
-                for row in st.session_state["rt_arp_records"]
+                row for row in st.session_state["rt_arp_records"]
                 if row.get("timestamp") is None or float(row.get("timestamp", now_ts)) >= cutoff
             ]
 
             rt_df = pd.DataFrame(st.session_state["rt_packet_rows"])
-            if not rt_df.empty:
-                realtime_findings = run_detection_pipeline(
-                    rt_df,
-                    st.session_state["rt_arp_records"],
-                )
-            else:
-                realtime_findings = []
+            realtime_findings = run_detection_pipeline(rt_df, st.session_state["rt_arp_records"]) if not rt_df.empty else []
 
             update_realtime_alert_state(
                 findings=realtime_findings,
@@ -962,60 +1001,42 @@ else:
                 resolve_after_sec=rt_config["window_seconds"],
             )
 
-            alert_state = st.session_state["rt_alert_state"]
-            active_alerts = [
-                alert for alert in alert_state.values() if alert.get("status") in ("new", "ongoing")
-            ]
-            active_df = pd.DataFrame(active_alerts)
-            feed_df = pd.DataFrame(st.session_state["rt_alert_feed"])
+            alert_state  = st.session_state["rt_alert_state"]
+            active_alerts = [a for a in alert_state.values() if a.get("status") in ("new", "ongoing")]
+            active_df    = pd.DataFrame(active_alerts)
+            feed_df      = pd.DataFrame(st.session_state["rt_alert_feed"])
 
             m1, m2, m3 = st.columns(3)
             m1.metric("Window Packets", len(st.session_state["rt_packet_rows"]))
-            m2.metric("Active Alerts", len(active_alerts))
+            m2.metric("Active Alerts",  len(active_alerts))
             m3.metric("Total Alert Events", len(st.session_state["rt_alert_feed"]))
 
             if not feed_df.empty:
-                feed_df["timestamp"] = pd.to_datetime(feed_df["timestamp"], unit="s")
+                # FIX 1: human-readable timestamps in RT alert feed
+                feed_df["timestamp"] = feed_df["timestamp"].apply(format_timestamp)
                 st.markdown("#### Alert Feed")
                 st.dataframe(feed_df.head(100), use_container_width=True)
             else:
                 st.caption("No alert events yet.")
 
             if not active_df.empty:
-                cols = [
-                    c
-                    for c in [
-                        "severity",
-                        "status",
-                        "alert_type",
-                        "src_ip",
-                        "dst_ip",
-                        "reason",
-                        "first_seen",
-                        "last_seen",
-                    ]
-                    if c in active_df.columns
-                ]
+                cols = [c for c in ["severity","status","alert_type","src_ip","dst_ip","reason","first_seen","last_seen"] if c in active_df.columns]
                 active_df = active_df[cols]
-                if "first_seen" in active_df.columns:
-                    active_df["first_seen"] = pd.to_datetime(active_df["first_seen"], unit="s")
-                if "last_seen" in active_df.columns:
-                    active_df["last_seen"] = pd.to_datetime(active_df["last_seen"], unit="s")
+                # FIX 1: human-readable timestamps in RT active alerts
+                for tc in ("first_seen", "last_seen"):
+                    if tc in active_df.columns:
+                        active_df[tc] = active_df[tc].apply(format_timestamp)
                 st.markdown("#### Active Alerts")
                 st.dataframe(active_df, use_container_width=True)
             else:
                 st.caption("No active alerts in the current time window.")
 
-            # Keep this view near real-time.
             time.sleep(0.1)
             st.rerun()
 
         except PermissionError:
             st.session_state["rt_monitoring"] = False
-            st.error(
-                "Permission denied while monitoring live traffic. "
-                "Try running Streamlit with elevated privileges."
-            )
+            st.error("Permission denied while monitoring live traffic. Try running Streamlit with elevated privileges.")
         except Exception as e:
             st.session_state["rt_monitoring"] = False
             st.error(f"Real-time monitoring failed: {e}")
