@@ -2,6 +2,8 @@ from collections import defaultdict
 from statistics import pstdev
 from scapy.all import IP, TCP, UDP, ICMP, ARP, DNS, DNSQR, Raw
 import pandas as pd
+import math
+import re
 
 
 def is_internal_ip(ip):
@@ -28,6 +30,58 @@ def is_internal_ip(ip):
         or ip.startswith("172.30.")
         or ip.startswith("172.31.")
     )
+
+
+def _ts_min_max(df: pd.DataFrame, mask: pd.Series) -> tuple:
+    try:
+        sub = df.loc[mask]
+        if sub.empty or "timestamp" not in sub.columns:
+            return None, None
+        ts = sub["timestamp"].dropna()
+        if ts.empty:
+            return None, None
+        return float(ts.min()), float(ts.max())
+    except Exception:
+        return None, None
+
+
+def _packet_nos(df: pd.DataFrame, mask: pd.Series, limit: int = 200) -> list:
+    if "packet_no" not in df.columns:
+        return []
+    try:
+        vals = df.loc[mask, "packet_no"].dropna().astype(int).tolist()
+        return vals[:limit]
+    except Exception:
+        return []
+
+
+def _shannon_entropy(s: str) -> float:
+    if not s:
+        return 0.0
+    counts = defaultdict(int)
+    for ch in s:
+        counts[ch] += 1
+    n = len(s)
+    ent = 0.0
+    for c in counts.values():
+        p = c / n
+        ent -= p * math.log2(p)
+    return ent
+
+
+def _extract_dns_label_features(q: str) -> dict:
+    q = (q or "").strip().lower().rstrip(".")
+    labels = [x for x in q.split(".") if x]
+    longest = max((len(x) for x in labels), default=0)
+    first = labels[0] if labels else ""
+    return {
+        "qname": q,
+        "label_count": len(labels),
+        "longest_label_len": longest,
+        "first_label_len": len(first),
+        "first_label_entropy": round(_shannon_entropy(first), 3) if first else 0.0,
+        "has_digits_ratio": round(sum(ch.isdigit() for ch in first) / max(1, len(first)), 3) if first else 0.0,
+    }
 
 
 def parse_pcap_packets(packets):
@@ -370,6 +424,60 @@ def detect_port_scanning(df, port_threshold=5):
     return results
 
 
+def detect_port_scanning_rate(df, unique_ports_threshold=20, ports_per_min_threshold=60.0, window_seconds=60.0):
+    """
+    Rate-based port scanning indicator:
+    - looks for many unique destination ports to a single dst in a short window
+    """
+    if df.empty or "timestamp" not in df.columns:
+        return []
+    tcp_df = df[(df["protocol"] == "TCP") & (df["dst_port"].notna()) & (df["timestamp"].notna())].copy()
+    if tcp_df.empty:
+        return []
+
+    # Bucket into time windows (relative to first seen)
+    base = float(tcp_df["timestamp"].min())
+    tcp_df["win"] = ((tcp_df["timestamp"].astype(float) - base) // float(window_seconds)).astype(int)
+
+    grouped = (
+        tcp_df.groupby(["src_ip", "dst_ip", "win"])
+        .agg(unique_ports=("dst_port", "nunique"), first_ts=("timestamp", "min"), last_ts=("timestamp", "max"))
+        .reset_index()
+    )
+    grouped["duration_sec"] = (grouped["last_ts"] - grouped["first_ts"]).clip(lower=1.0)
+    grouped["ports_per_min"] = grouped["unique_ports"] / grouped["duration_sec"] * 60.0
+
+    suspicious = grouped[
+        (grouped["unique_ports"] >= int(unique_ports_threshold))
+        | (grouped["ports_per_min"] >= float(ports_per_min_threshold))
+    ]
+
+    results = []
+    for _, row in suspicious.iterrows():
+        mask = (
+            (tcp_df["src_ip"] == row["src_ip"])
+            & (tcp_df["dst_ip"] == row["dst_ip"])
+            & (tcp_df["win"] == row["win"])
+        )
+        first_seen, last_seen = _ts_min_max(tcp_df, mask)
+        pkt_nos = _packet_nos(tcp_df, mask, limit=200)
+        results.append(
+            {
+                "alert_type": "Possible Port Scanning (Rate-Based)",
+                "severity": "High" if float(row["ports_per_min"]) >= float(ports_per_min_threshold) else "Medium",
+                "src_ip": row["src_ip"],
+                "dst_ip": row["dst_ip"],
+                "unique_dst_ports": int(row["unique_ports"]),
+                "ports_per_min": round(float(row["ports_per_min"]), 2),
+                "first_seen_ts": first_seen,
+                "last_seen_ts": last_seen,
+                "evidence_packet_nos": pkt_nos,
+                "reason": f"Unique ports={int(row['unique_ports'])}, Rate={round(float(row['ports_per_min']),2)}/min within ~{int(window_seconds)}s window.",
+            }
+        )
+    return results
+
+
 def detect_arp_spoofing(arp_records):
     if not arp_records:
         return []
@@ -440,6 +548,64 @@ def detect_ddos(df, source_threshold=20, packet_threshold=50):
             }
         )
 
+    return results
+
+
+def detect_syn_flood_rate(df, syn_per_sec_threshold=30.0, unique_src_threshold=10, window_seconds=10.0):
+    """
+    Rate-based SYN flood signal:
+    - for each dst_ip and short window, detect high SYN/sec and many unique sources
+    """
+    if df.empty or "timestamp" not in df.columns:
+        return []
+    tcp_df = df[
+        (df["protocol"] == "TCP")
+        & (df["src_ip"] != "N/A")
+        & (df["dst_ip"] != "N/A")
+        & (df["tcp_flags"].notna())
+        & (df["timestamp"].notna())
+    ].copy()
+    if tcp_df.empty:
+        return []
+    syn_df = tcp_df[tcp_df["tcp_flags"].astype(str).str.contains("S")].copy()
+    if syn_df.empty:
+        return []
+
+    base = float(syn_df["timestamp"].min())
+    syn_df["win"] = ((syn_df["timestamp"].astype(float) - base) // float(window_seconds)).astype(int)
+
+    grouped = (
+        syn_df.groupby(["dst_ip", "win"])
+        .agg(total_syn=("dst_ip", "count"), unique_src=("src_ip", "nunique"), first_ts=("timestamp", "min"), last_ts=("timestamp", "max"))
+        .reset_index()
+    )
+    grouped["duration_sec"] = (grouped["last_ts"] - grouped["first_ts"]).clip(lower=1.0)
+    grouped["syn_per_sec"] = grouped["total_syn"] / grouped["duration_sec"]
+
+    suspicious = grouped[
+        (grouped["syn_per_sec"] >= float(syn_per_sec_threshold))
+        & (grouped["unique_src"] >= int(unique_src_threshold))
+    ]
+
+    results = []
+    for _, row in suspicious.iterrows():
+        mask = (syn_df["dst_ip"] == row["dst_ip"]) & (syn_df["win"] == row["win"])
+        first_seen, last_seen = _ts_min_max(syn_df, mask)
+        pkt_nos = _packet_nos(syn_df, mask, limit=250)
+        results.append(
+            {
+                "alert_type": "Possible SYN Flood (Rate-Based)",
+                "severity": "Critical" if float(row["syn_per_sec"]) >= float(syn_per_sec_threshold) * 1.5 else "High",
+                "dst_ip": row["dst_ip"],
+                "unique_source_ips": int(row["unique_src"]),
+                "total_syn_packets": int(row["total_syn"]),
+                "syn_per_sec": round(float(row["syn_per_sec"]), 2),
+                "first_seen_ts": first_seen,
+                "last_seen_ts": last_seen,
+                "evidence_packet_nos": pkt_nos,
+                "reason": f"SYN rate={round(float(row['syn_per_sec']),2)}/sec with {int(row['unique_src'])} sources in ~{int(window_seconds)}s window.",
+            }
+        )
     return results
 
 
@@ -578,6 +744,60 @@ def detect_unusual_outbound_connections(
     return results
 
 
+def detect_rare_outbound_destinations(df, min_packets=8):
+    """
+    Simple anomaly: for each internal src, flag destinations that are rare compared to its
+    own outbound set (useful in small PCAPs without long baselines).
+    """
+    if df.empty:
+        return []
+    valid = df[
+        (df["src_ip"] != "N/A")
+        & (df["dst_ip"] != "N/A")
+        & (df["timestamp"].notna() if "timestamp" in df.columns else True)
+    ].copy()
+    if valid.empty:
+        return []
+
+    outbound = valid[valid.apply(lambda r: is_internal_ip(r["src_ip"]) and not is_internal_ip(r["dst_ip"]), axis=1)].copy()
+    if outbound.empty:
+        return []
+
+    # For each src, count packets per dst and compute rarity
+    dst_counts = outbound.groupby(["src_ip", "dst_ip"]).size().reset_index(name="packet_count")
+    total_by_src = outbound.groupby("src_ip").size().to_dict()
+
+    results = []
+    for _, row in dst_counts.iterrows():
+        src = row["src_ip"]
+        dst = row["dst_ip"]
+        pc = int(row["packet_count"])
+        if pc < int(min_packets):
+            continue
+        total = int(total_by_src.get(src, pc))
+        ratio = pc / max(1, total)
+        # "rare" heuristic: not dominant traffic but still non-trivial volume
+        if ratio <= 0.25 and total >= 40:
+            mask = (outbound["src_ip"] == src) & (outbound["dst_ip"] == dst)
+            first_seen, last_seen = _ts_min_max(outbound, mask)
+            results.append(
+                {
+                    "alert_type": "Rare Outbound Destination (Heuristic)",
+                    "severity": "Medium",
+                    "src_ip": src,
+                    "dst_ip": dst,
+                    "packet_count": pc,
+                    "share_of_src_outbound": round(ratio, 3),
+                    "total_src_outbound_packets": total,
+                    "first_seen_ts": first_seen,
+                    "last_seen_ts": last_seen,
+                    "evidence_packet_nos": _packet_nos(outbound, mask, limit=150),
+                    "reason": f"{pc} packets to a less-common external destination ({round(ratio*100,1)}% of src outbound).",
+                }
+            )
+    return results
+
+
 def detect_data_exfiltration(df, byte_threshold=20000):
     if df.empty:
         return []
@@ -616,6 +836,98 @@ def detect_data_exfiltration(df, byte_threshold=20000):
                 "total_bytes_sent": int(row["total_bytes_sent"]),
             }
         )
+
+    return results
+
+
+def detect_dns_anomalies(
+    df,
+    *,
+    high_volume_threshold=60,
+    nxdomain_ratio_threshold=0.35,
+    long_label_len_threshold=25,
+    high_entropy_threshold=3.6,
+):
+    """
+    DNS anomaly / tunneling heuristics:
+    - high query volume per src
+    - high NXDOMAIN ratio per src
+    - unusually long / high-entropy first label (common in tunneling)
+    """
+    if df.empty:
+        return []
+    dns_df = df[(df.get("app_protocol") == "DNS") & (df["dns_query"].notna())].copy()
+    if dns_df.empty:
+        return []
+
+    dns_df["dns_query"] = dns_df["dns_query"].astype(str)
+    feats = dns_df["dns_query"].apply(_extract_dns_label_features)
+    feats_df = pd.DataFrame(list(feats))
+    dns_df = pd.concat([dns_df.reset_index(drop=True), feats_df.reset_index(drop=True)], axis=1)
+
+    # High volume / NXDOMAIN ratio by src
+    src_group = (
+        dns_df.groupby("src_ip")
+        .agg(
+            query_count=("dns_query", "count"),
+            unique_qnames=("dns_query", "nunique"),
+            nxdomain_count=("dns_rcode", lambda s: int((pd.to_numeric(s, errors="coerce") == 3).sum())),
+        )
+        .reset_index()
+    )
+    src_group["nxdomain_ratio"] = src_group["nxdomain_count"] / src_group["query_count"].clip(lower=1)
+
+    results = []
+
+    for _, row in src_group.iterrows():
+        reasons = []
+        if int(row["query_count"]) >= int(high_volume_threshold):
+            reasons.append(f"High DNS query volume: {int(row['query_count'])} queries")
+        if float(row["nxdomain_ratio"]) >= float(nxdomain_ratio_threshold) and int(row["query_count"]) >= 20:
+            reasons.append(f"High NXDOMAIN ratio: {round(float(row['nxdomain_ratio']),3)}")
+        if not reasons:
+            continue
+
+        mask = dns_df["src_ip"] == row["src_ip"]
+        first_seen, last_seen = _ts_min_max(dns_df, mask)
+        results.append(
+            {
+                "alert_type": "DNS Anomaly (Volume/NXDOMAIN)",
+                "severity": "Medium",
+                "src_ip": row["src_ip"],
+                "dns_queries": int(row["query_count"]),
+                "unique_qnames": int(row["unique_qnames"]),
+                "nxdomain_ratio": round(float(row["nxdomain_ratio"]), 3),
+                "first_seen_ts": first_seen,
+                "last_seen_ts": last_seen,
+                "evidence_packet_nos": _packet_nos(dns_df, mask, limit=200),
+                "reason": " | ".join(reasons),
+            }
+        )
+
+    # Tunneling-ish qnames (per src)
+    tunneling_mask = (
+        (dns_df["first_label_len"] >= int(long_label_len_threshold))
+        & (dns_df["first_label_entropy"] >= float(high_entropy_threshold))
+    )
+    if tunneling_mask.any():
+        for src_ip, sub in dns_df[tunneling_mask].groupby("src_ip"):
+            # show a few representative qnames
+            examples = sub["dns_query"].value_counts().head(5).index.tolist()
+            first_seen, last_seen = _ts_min_max(dns_df, (dns_df["src_ip"] == src_ip) & tunneling_mask)
+            results.append(
+                {
+                    "alert_type": "Possible DNS Tunneling (Heuristic)",
+                    "severity": "High",
+                    "src_ip": src_ip,
+                    "suspicious_query_count": int(len(sub)),
+                    "examples": ", ".join(examples),
+                    "first_seen_ts": first_seen,
+                    "last_seen_ts": last_seen,
+                    "evidence_packet_nos": _packet_nos(dns_df, (dns_df["src_ip"] == src_ip) & tunneling_mask, limit=200),
+                    "reason": f"Long/high-entropy DNS labels observed (len≥{int(long_label_len_threshold)}, entropy≥{float(high_entropy_threshold)}).",
+                }
+            )
 
     return results
 

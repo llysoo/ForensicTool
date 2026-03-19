@@ -1,0 +1,1580 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>NetSleuth IR Report - 20260319_025740</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; color: #111; }
+    h1 { margin: 0 0 6px 0; }
+    .meta { margin: 10px 0 18px 0; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; }
+    .kv { font-size: 13px; }
+    .k { color: #444; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ddd; padding: 6px 8px; font-size: 12px; vertical-align: top; }
+    th { background: #f6f6f6; text-align: left; }
+    .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+    .chart { border: 1px solid #ddd; border-radius: 8px; padding: 8px; }
+    .chart img { width: 100%; height: auto; }
+    .caption { font-size: 12px; color: #444; margin: 0 0 6px 0; }
+    pre { white-space: pre-wrap; border: 1px solid #eee; padding: 10px; border-radius: 8px; background: #fafafa; }
+  </style>
+</head>
+<body>
+  <h1>NetSleuth IR Report</h1>
+  <div class="meta">
+    <div class="grid">
+      <div class="kv"><span class="k">Run ID:</span> 20260319_025740</div>
+      <div class="kv"><span class="k">Generated:</span> 2026-03-19T02:57:42Z</div>
+      <div class="kv"><span class="k">Source:</span> upload</div>
+      <div class="kv"><span class="k">PCAP SHA-256:</span> 4a0f8319a4c0a66c89fe42bdb71c82bb81b57fa850ebe660dceba5dbd49412e2</div>
+    </div>
+  </div>
+
+  <h2>Traffic Summary</h2>
+  <pre>{
+  &quot;total_packets&quot;: 306,
+  &quot;unique_source_ips&quot;: 52,
+  &quot;unique_destination_ips&quot;: 4,
+  &quot;tcp_count&quot;: 196,
+  &quot;udp_count&quot;: 110,
+  &quot;icmp_count&quot;: 0,
+  &quot;arp_count&quot;: 0,
+  &quot;other_count&quot;: 0
+}</pre>
+
+  <h2>Charts</h2>
+  <div class='charts'><div class='chart'><div class='caption'>alerts_by_severity.png</div><img src='artifacts/alerts_by_severity.png'/></div><div class='chart'><div class='caption'>alert_timeline.png</div><img src='artifacts/alert_timeline.png'/></div></div>
+
+  <h2>Findings</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Severity</th><th>Type</th><th>Src</th><th>Dst</th><th>Proto</th><th>Dst Port</th><th>Reason</th><th>First Seen</th><th>Last Seen</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>High</td><td>Possible Port Scanning</td><td>192.168.1.10</td><td>203.0.113.50</td><td></td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.10</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.11</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.12</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.13</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.14</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.15</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.16</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.17</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.18</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.19</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.20</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.21</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.22</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.23</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.24</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.25</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.26</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.27</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.28</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.29</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.30</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.31</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.32</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.33</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.34</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.35</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.36</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.37</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.38</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.39</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.40</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.41</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.42</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.43</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.44</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.45</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.46</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.47</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.48</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.49</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.50</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:49 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.51</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:49 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.52</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:49 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.53</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:49 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.54</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.55</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.56</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.57</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.58</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Port Scanning (Rate-Based)</td><td>10.0.0.59</td><td>192.168.1.99</td><td></td><td></td><td>Unique ports=1, Rate=60.0/min within ~60s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>High</td><td>Possible Port Scanning (Rate-Based)</td><td>192.168.1.10</td><td>203.0.113.50</td><td></td><td></td><td>Unique ports=50, Rate=3000.0/min within ~60s window.</td><td>2026-03-19 02:46:47 UTC</td><td>2026-03-19 02:46:48 UTC</td></tr><tr><td>High</td><td>Possible DDoS / SYN Flood</td><td></td><td>192.168.1.99</td><td></td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Critical</td><td>Possible SYN Flood (Rate-Based)</td><td></td><td>192.168.1.99</td><td></td><td></td><td>SYN rate=100.72/sec with 50 sources in ~10s window.</td><td>2026-03-19 02:46:49 UTC</td><td>2026-03-19 02:46:50 UTC</td></tr><tr><td>Medium</td><td>Possible Beaconing</td><td>192.168.1.10</td><td>93.184.216.34</td><td>TCP</td><td>80</td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Medium</td><td>Possible Beaconing</td><td>192.168.1.20</td><td>8.8.8.8</td><td>UDP</td><td>53</td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Medium</td><td>Possible Beaconing</td><td>192.168.1.10</td><td>203.0.113.50</td><td>UDP</td><td>4444</td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Medium</td><td>Possible Unusual Outbound Connection</td><td>192.168.1.10</td><td>203.0.113.50</td><td></td><td></td><td>Unusual destination ports: [4444]</td><td>N/A</td><td>N/A</td></tr><tr><td>High</td><td>Possible Data Exfiltration</td><td>192.168.1.10</td><td>203.0.113.50</td><td></td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>High</td><td>Possible Data Exfiltration</td><td>192.168.1.20</td><td>8.8.8.8</td><td></td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Medium</td><td>DNS Anomaly (Volume/NXDOMAIN)</td><td>192.168.1.20</td><td></td><td></td><td></td><td>High DNS query volume: 90 queries</td><td>2026-03-19 02:46:51 UTC</td><td>2026-03-19 02:46:58 UTC</td></tr><tr><td>High</td><td>Possible DNS Tunneling (Heuristic)</td><td>192.168.1.20</td><td></td><td></td><td></td><td>Long/high-entropy DNS labels observed (len≥25, entropy≥3.6).</td><td>2026-03-19 02:46:51 UTC</td><td>2026-03-19 02:46:58 UTC</td></tr><tr><td>Low</td><td>Large Packet</td><td>192.168.1.10</td><td>203.0.113.50</td><td>UDP</td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Low</td><td>Large Packet</td><td>192.168.1.10</td><td>203.0.113.50</td><td>UDP</td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Low</td><td>Large Packet</td><td>192.168.1.10</td><td>203.0.113.50</td><td>UDP</td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Low</td><td>Large Packet</td><td>192.168.1.10</td><td>203.0.113.50</td><td>UDP</td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Low</td><td>Large Packet</td><td>192.168.1.10</td><td>203.0.113.50</td><td>UDP</td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Low</td><td>Large Packet</td><td>192.168.1.10</td><td>203.0.113.50</td><td>UDP</td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Low</td><td>Large Packet</td><td>192.168.1.10</td><td>203.0.113.50</td><td>UDP</td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Low</td><td>Large Packet</td><td>192.168.1.10</td><td>203.0.113.50</td><td>UDP</td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Low</td><td>Large Packet</td><td>192.168.1.10</td><td>203.0.113.50</td><td>UDP</td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Low</td><td>Large Packet</td><td>192.168.1.10</td><td>203.0.113.50</td><td>UDP</td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Low</td><td>Large Packet</td><td>192.168.1.10</td><td>203.0.113.50</td><td>UDP</td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Low</td><td>Large Packet</td><td>192.168.1.10</td><td>203.0.113.50</td><td>UDP</td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Low</td><td>Large Packet</td><td>192.168.1.10</td><td>203.0.113.50</td><td>UDP</td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Low</td><td>Large Packet</td><td>192.168.1.10</td><td>203.0.113.50</td><td>UDP</td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Low</td><td>Large Packet</td><td>192.168.1.10</td><td>203.0.113.50</td><td>UDP</td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Low</td><td>Large Packet</td><td>192.168.1.10</td><td>203.0.113.50</td><td>UDP</td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Low</td><td>Large Packet</td><td>192.168.1.10</td><td>203.0.113.50</td><td>UDP</td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Low</td><td>Large Packet</td><td>192.168.1.10</td><td>203.0.113.50</td><td>UDP</td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Low</td><td>Large Packet</td><td>192.168.1.10</td><td>203.0.113.50</td><td>UDP</td><td></td><td></td><td>N/A</td><td>N/A</td></tr><tr><td>Low</td><td>Large Packet</td><td>192.168.1.10</td><td>203.0.113.50</td><td>UDP</td><td></td><td></td><td>N/A</td><td>N/A</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Full JSON</h2>
+  <pre>{
+  &quot;run&quot;: {
+    &quot;run_id&quot;: &quot;20260319_025740&quot;,
+    &quot;analyst&quot;: &quot;Angela Tobias&quot;,
+    &quot;notes&quot;: &quot;&quot;,
+    &quot;host&quot;: &quot;SilveRain&quot;,
+    &quot;platform&quot;: &quot;Windows-11-10.0.26200-SP0&quot;
+  },
+  &quot;input&quot;: {
+    &quot;source_type&quot;: &quot;upload&quot;,
+    &quot;original_name&quot;: &quot;sample_suspicious.pcap&quot;,
+    &quot;size_bytes&quot;: 50868,
+    &quot;sha256&quot;: &quot;4a0f8319a4c0a66c89fe42bdb71c82bb81b57fa850ebe660dceba5dbd49412e2&quot;,
+    &quot;saved_pcap_path&quot;: &quot;C:\\Codes\\ForensicTool_DIGIFOR\\ForensicTool\\cases\\netsleuth_case_20260319_025740\\input_sample_suspicious.pcap&quot;
+  },
+  &quot;config&quot;: {
+    &quot;detectors&quot;: {
+      &quot;port_scanning&quot;: {
+        &quot;unique_ports_threshold&quot;: 5
+      },
+      &quot;port_scanning_rate&quot;: {
+        &quot;unique_ports_threshold&quot;: 20,
+        &quot;ports_per_min_threshold&quot;: 60.0,
+        &quot;window_seconds&quot;: 60.0
+      },
+      &quot;ddos_syn_total&quot;: {
+        &quot;source_threshold&quot;: 20,
+        &quot;packet_threshold&quot;: 50
+      },
+      &quot;syn_flood_rate&quot;: {
+        &quot;syn_per_sec_threshold&quot;: 30.0,
+        &quot;unique_src_threshold&quot;: 10,
+        &quot;window_seconds&quot;: 10.0
+      },
+      &quot;beaconing&quot;: {
+        &quot;min_connections&quot;: 4,
+        &quot;interval_tolerance&quot;: 2.0
+      },
+      &quot;unusual_outbound&quot;: {
+        &quot;external_host_threshold&quot;: 3,
+        &quot;packet_threshold&quot;: 5
+      },
+      &quot;rare_outbound&quot;: {
+        &quot;min_packets&quot;: 8
+      },
+      &quot;data_exfil&quot;: {
+        &quot;byte_threshold&quot;: 10000
+      },
+      &quot;dns_anomalies&quot;: {},
+      &quot;icmp_flood&quot;: {
+        &quot;icmp_threshold&quot;: 3
+      },
+      &quot;icmp_sweep&quot;: {
+        &quot;target_threshold&quot;: 5
+      },
+      &quot;large_packets&quot;: {
+        &quot;size_threshold&quot;: 1000
+      }
+    }
+  },
+  &quot;traffic_summary&quot;: {
+    &quot;total_packets&quot;: 306,
+    &quot;unique_source_ips&quot;: 52,
+    &quot;unique_destination_ips&quot;: 4,
+    &quot;tcp_count&quot;: 196,
+    &quot;udp_count&quot;: 110,
+    &quot;icmp_count&quot;: 0,
+    &quot;arp_count&quot;: 0,
+    &quot;other_count&quot;: 0
+  },
+  &quot;findings&quot;: [
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning&quot;,
+      &quot;severity&quot;: &quot;High&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;unique_dst_ports&quot;: 50
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.10&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.063153,
+      &quot;last_seen_ts&quot;: 1773888410.063152,
+      &quot;evidence_packet_nos&quot;: [
+        57,
+        107,
+        157
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.11&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.073153,
+      &quot;last_seen_ts&quot;: 1773888410.073152,
+      &quot;evidence_packet_nos&quot;: [
+        58,
+        108,
+        158
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.12&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.083153,
+      &quot;last_seen_ts&quot;: 1773888410.083152,
+      &quot;evidence_packet_nos&quot;: [
+        59,
+        109,
+        159
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.13&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.093153,
+      &quot;last_seen_ts&quot;: 1773888410.093152,
+      &quot;evidence_packet_nos&quot;: [
+        60,
+        110,
+        160
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.14&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.103153,
+      &quot;last_seen_ts&quot;: 1773888410.103152,
+      &quot;evidence_packet_nos&quot;: [
+        61,
+        111,
+        161
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.15&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.113153,
+      &quot;last_seen_ts&quot;: 1773888410.113152,
+      &quot;evidence_packet_nos&quot;: [
+        62,
+        112,
+        162
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.16&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.123152,
+      &quot;last_seen_ts&quot;: 1773888410.123152,
+      &quot;evidence_packet_nos&quot;: [
+        63,
+        113,
+        163
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.17&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.133152,
+      &quot;last_seen_ts&quot;: 1773888410.133152,
+      &quot;evidence_packet_nos&quot;: [
+        64,
+        114,
+        164
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.18&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.143152,
+      &quot;last_seen_ts&quot;: 1773888410.143152,
+      &quot;evidence_packet_nos&quot;: [
+        65,
+        115,
+        165
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.19&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.153152,
+      &quot;last_seen_ts&quot;: 1773888410.153152,
+      &quot;evidence_packet_nos&quot;: [
+        66,
+        116,
+        166
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.20&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.163152,
+      &quot;last_seen_ts&quot;: 1773888410.163152,
+      &quot;evidence_packet_nos&quot;: [
+        67,
+        117,
+        167
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.21&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.173152,
+      &quot;last_seen_ts&quot;: 1773888410.173151,
+      &quot;evidence_packet_nos&quot;: [
+        68,
+        118,
+        168
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.22&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.183152,
+      &quot;last_seen_ts&quot;: 1773888410.183151,
+      &quot;evidence_packet_nos&quot;: [
+        69,
+        119,
+        169
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.23&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.193152,
+      &quot;last_seen_ts&quot;: 1773888410.193151,
+      &quot;evidence_packet_nos&quot;: [
+        70,
+        120,
+        170
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.24&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.203152,
+      &quot;last_seen_ts&quot;: 1773888410.203151,
+      &quot;evidence_packet_nos&quot;: [
+        71,
+        121,
+        171
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.25&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.213152,
+      &quot;last_seen_ts&quot;: 1773888410.213151,
+      &quot;evidence_packet_nos&quot;: [
+        72,
+        122,
+        172
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.26&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.223152,
+      &quot;last_seen_ts&quot;: 1773888410.223151,
+      &quot;evidence_packet_nos&quot;: [
+        73,
+        123,
+        173
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.27&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.233152,
+      &quot;last_seen_ts&quot;: 1773888410.233151,
+      &quot;evidence_packet_nos&quot;: [
+        74,
+        124,
+        174
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.28&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.243152,
+      &quot;last_seen_ts&quot;: 1773888410.243151,
+      &quot;evidence_packet_nos&quot;: [
+        75,
+        125,
+        175
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.29&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.253152,
+      &quot;last_seen_ts&quot;: 1773888410.253151,
+      &quot;evidence_packet_nos&quot;: [
+        76,
+        126,
+        176
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.30&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.263152,
+      &quot;last_seen_ts&quot;: 1773888410.263151,
+      &quot;evidence_packet_nos&quot;: [
+        77,
+        127,
+        177
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.31&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.273152,
+      &quot;last_seen_ts&quot;: 1773888410.273151,
+      &quot;evidence_packet_nos&quot;: [
+        78,
+        128,
+        178
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.32&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.283152,
+      &quot;last_seen_ts&quot;: 1773888410.283151,
+      &quot;evidence_packet_nos&quot;: [
+        79,
+        129,
+        179
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.33&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.293152,
+      &quot;last_seen_ts&quot;: 1773888410.293151,
+      &quot;evidence_packet_nos&quot;: [
+        80,
+        130,
+        180
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.34&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.303152,
+      &quot;last_seen_ts&quot;: 1773888410.303151,
+      &quot;evidence_packet_nos&quot;: [
+        81,
+        131,
+        181
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.35&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.313152,
+      &quot;last_seen_ts&quot;: 1773888410.313151,
+      &quot;evidence_packet_nos&quot;: [
+        82,
+        132,
+        182
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.36&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.323152,
+      &quot;last_seen_ts&quot;: 1773888410.323151,
+      &quot;evidence_packet_nos&quot;: [
+        83,
+        133,
+        183
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.37&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.333152,
+      &quot;last_seen_ts&quot;: 1773888410.333151,
+      &quot;evidence_packet_nos&quot;: [
+        84,
+        134,
+        184
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.38&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.343152,
+      &quot;last_seen_ts&quot;: 1773888410.343151,
+      &quot;evidence_packet_nos&quot;: [
+        85,
+        135,
+        185
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.39&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.353152,
+      &quot;last_seen_ts&quot;: 1773888410.353151,
+      &quot;evidence_packet_nos&quot;: [
+        86,
+        136,
+        186
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.40&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.363152,
+      &quot;last_seen_ts&quot;: 1773888410.363151,
+      &quot;evidence_packet_nos&quot;: [
+        87,
+        137,
+        187
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.41&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.373152,
+      &quot;last_seen_ts&quot;: 1773888410.373151,
+      &quot;evidence_packet_nos&quot;: [
+        88,
+        138,
+        188
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.42&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.383152,
+      &quot;last_seen_ts&quot;: 1773888410.383151,
+      &quot;evidence_packet_nos&quot;: [
+        89,
+        139,
+        189
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.43&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.393152,
+      &quot;last_seen_ts&quot;: 1773888410.393151,
+      &quot;evidence_packet_nos&quot;: [
+        90,
+        140,
+        190
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.44&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.403152,
+      &quot;last_seen_ts&quot;: 1773888410.403151,
+      &quot;evidence_packet_nos&quot;: [
+        91,
+        141,
+        191
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.45&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.413152,
+      &quot;last_seen_ts&quot;: 1773888410.413151,
+      &quot;evidence_packet_nos&quot;: [
+        92,
+        142,
+        192
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.46&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.423152,
+      &quot;last_seen_ts&quot;: 1773888410.423151,
+      &quot;evidence_packet_nos&quot;: [
+        93,
+        143,
+        193
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.47&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.433152,
+      &quot;last_seen_ts&quot;: 1773888410.433151,
+      &quot;evidence_packet_nos&quot;: [
+        94,
+        144,
+        194
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.48&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.443152,
+      &quot;last_seen_ts&quot;: 1773888410.443151,
+      &quot;evidence_packet_nos&quot;: [
+        95,
+        145,
+        195
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.49&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.453152,
+      &quot;last_seen_ts&quot;: 1773888410.453151,
+      &quot;evidence_packet_nos&quot;: [
+        96,
+        146,
+        196
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.50&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.463152,
+      &quot;last_seen_ts&quot;: 1773888409.963152,
+      &quot;evidence_packet_nos&quot;: [
+        97,
+        147
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.51&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.473152,
+      &quot;last_seen_ts&quot;: 1773888409.973152,
+      &quot;evidence_packet_nos&quot;: [
+        98,
+        148
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.52&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.483152,
+      &quot;last_seen_ts&quot;: 1773888409.983152,
+      &quot;evidence_packet_nos&quot;: [
+        99,
+        149
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.53&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.493152,
+      &quot;last_seen_ts&quot;: 1773888409.993152,
+      &quot;evidence_packet_nos&quot;: [
+        100,
+        150
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.54&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.503152,
+      &quot;last_seen_ts&quot;: 1773888410.003152,
+      &quot;evidence_packet_nos&quot;: [
+        101,
+        151
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.55&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.513152,
+      &quot;last_seen_ts&quot;: 1773888410.013152,
+      &quot;evidence_packet_nos&quot;: [
+        102,
+        152
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.56&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.523152,
+      &quot;last_seen_ts&quot;: 1773888410.023152,
+      &quot;evidence_packet_nos&quot;: [
+        103,
+        153
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.57&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.533152,
+      &quot;last_seen_ts&quot;: 1773888410.033152,
+      &quot;evidence_packet_nos&quot;: [
+        104,
+        154
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.58&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.543152,
+      &quot;last_seen_ts&quot;: 1773888410.043152,
+      &quot;evidence_packet_nos&quot;: [
+        105,
+        155
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;10.0.0.59&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_dst_ports&quot;: 1,
+      &quot;ports_per_min&quot;: 60.0,
+      &quot;first_seen_ts&quot;: 1773888409.553152,
+      &quot;last_seen_ts&quot;: 1773888410.053152,
+      &quot;evidence_packet_nos&quot;: [
+        106,
+        156
+      ],
+      &quot;reason&quot;: &quot;Unique ports=1, Rate=60.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Port Scanning (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;High&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;unique_dst_ports&quot;: 50,
+      &quot;ports_per_min&quot;: 3000.0,
+      &quot;first_seen_ts&quot;: 1773888407.063154,
+      &quot;last_seen_ts&quot;: 1773888408.043153,
+      &quot;evidence_packet_nos&quot;: [
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56
+      ],
+      &quot;reason&quot;: &quot;Unique ports=50, Rate=3000.0/min within ~60s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible DDoS / SYN Flood&quot;,
+      &quot;severity&quot;: &quot;High&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_source_ips&quot;: 50,
+      &quot;total_syn_packets&quot;: 140
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible SYN Flood (Rate-Based)&quot;,
+      &quot;severity&quot;: &quot;Critical&quot;,
+      &quot;dst_ip&quot;: &quot;192.168.1.99&quot;,
+      &quot;unique_source_ips&quot;: 50,
+      &quot;total_syn_packets&quot;: 140,
+      &quot;syn_per_sec&quot;: 100.72,
+      &quot;first_seen_ts&quot;: 1773888409.063153,
+      &quot;last_seen_ts&quot;: 1773888410.453151,
+      &quot;evidence_packet_nos&quot;: [
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141,
+        142,
+        143,
+        144,
+        145,
+        146,
+        147,
+        148,
+        149,
+        150,
+        151,
+        152,
+        153,
+        154,
+        155,
+        156,
+        157,
+        158,
+        159,
+        160,
+        161,
+        162,
+        163,
+        164,
+        165,
+        166,
+        167,
+        168,
+        169,
+        170,
+        171,
+        172,
+        173,
+        174,
+        175,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196
+      ],
+      &quot;reason&quot;: &quot;SYN rate=100.72/sec with 50 sources in ~10s window.&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Beaconing&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;93.184.216.34&quot;,
+      &quot;dst_port&quot;: 80,
+      &quot;protocol&quot;: &quot;TCP&quot;,
+      &quot;connection_count&quot;: 6,
+      &quot;avg_interval_sec&quot;: 0.25,
+      &quot;interval_stddev&quot;: 0.0
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Beaconing&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.20&quot;,
+      &quot;dst_ip&quot;: &quot;8.8.8.8&quot;,
+      &quot;dst_port&quot;: 53,
+      &quot;protocol&quot;: &quot;UDP&quot;,
+      &quot;connection_count&quot;: 90,
+      &quot;avg_interval_sec&quot;: 0.08,
+      &quot;interval_stddev&quot;: 0.0
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Beaconing&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;dst_port&quot;: 4444,
+      &quot;protocol&quot;: &quot;UDP&quot;,
+      &quot;connection_count&quot;: 20,
+      &quot;avg_interval_sec&quot;: 0.05,
+      &quot;interval_stddev&quot;: 0.0
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Unusual Outbound Connection&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;packet_count&quot;: 70,
+      &quot;total_bytes&quot;: 27540,
+      &quot;protocols&quot;: &quot;TCP, UDP&quot;,
+      &quot;dst_ports&quot;: &quot;20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 4444&quot;,
+      &quot;reason&quot;: &quot;Unusual destination ports: [4444]&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Data Exfiltration&quot;,
+      &quot;severity&quot;: &quot;High&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;total_bytes_sent&quot;: 27540
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible Data Exfiltration&quot;,
+      &quot;severity&quot;: &quot;High&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.20&quot;,
+      &quot;dst_ip&quot;: &quot;8.8.8.8&quot;,
+      &quot;total_bytes_sent&quot;: 10080
+    },
+    {
+      &quot;alert_type&quot;: &quot;DNS Anomaly (Volume/NXDOMAIN)&quot;,
+      &quot;severity&quot;: &quot;Medium&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.20&quot;,
+      &quot;dns_queries&quot;: 90,
+      &quot;unique_qnames&quot;: 90,
+      &quot;nxdomain_ratio&quot;: 0.0,
+      &quot;first_seen_ts&quot;: 1773888411.463151,
+      &quot;last_seen_ts&quot;: 1773888418.583144,
+      &quot;evidence_packet_nos&quot;: [
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212,
+        213,
+        214,
+        215,
+        216,
+        217,
+        218,
+        219,
+        220,
+        221,
+        222,
+        223,
+        224,
+        225,
+        226,
+        227,
+        228,
+        229,
+        230,
+        231,
+        232,
+        233,
+        234,
+        235,
+        236,
+        237,
+        238,
+        239,
+        240,
+        241,
+        242,
+        243,
+        244,
+        245,
+        246,
+        247,
+        248,
+        249,
+        250,
+        251,
+        252,
+        253,
+        254,
+        255,
+        256,
+        257,
+        258,
+        259,
+        260,
+        261,
+        262,
+        263,
+        264,
+        265,
+        266,
+        267,
+        268,
+        269,
+        270,
+        271,
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        278,
+        279,
+        280,
+        281,
+        282,
+        283,
+        284,
+        285,
+        286
+      ],
+      &quot;reason&quot;: &quot;High DNS query volume: 90 queries&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Possible DNS Tunneling (Heuristic)&quot;,
+      &quot;severity&quot;: &quot;High&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.20&quot;,
+      &quot;suspicious_query_count&quot;: 90,
+      &quot;examples&quot;: &quot;ujzde8gxd6ncf10epf91dhodzdoc9is0.tunnel-example.test, j8ht9lgmxg9edn581u33xtplpft75v2s.tunnel-example.test, eh60kvj50ce9uvw53efr4edt2sywb3wk.tunnel-example.test, h5dnsipzz5fk2z9ri19r0wyojfljooa5.tunnel-example.test, lqsaj08xui6d39zzzzg4zdmen2khvdga.tunnel-example.test&quot;,
+      &quot;first_seen_ts&quot;: 1773888411.463151,
+      &quot;last_seen_ts&quot;: 1773888418.583144,
+      &quot;evidence_packet_nos&quot;: [
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212,
+        213,
+        214,
+        215,
+        216,
+        217,
+        218,
+        219,
+        220,
+        221,
+        222,
+        223,
+        224,
+        225,
+        226,
+        227,
+        228,
+        229,
+        230,
+        231,
+        232,
+        233,
+        234,
+        235,
+        236,
+        237,
+        238,
+        239,
+        240,
+        241,
+        242,
+        243,
+        244,
+        245,
+        246,
+        247,
+        248,
+        249,
+        250,
+        251,
+        252,
+        253,
+        254,
+        255,
+        256,
+        257,
+        258,
+        259,
+        260,
+        261,
+        262,
+        263,
+        264,
+        265,
+        266,
+        267,
+        268,
+        269,
+        270,
+        271,
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        278,
+        279,
+        280,
+        281,
+        282,
+        283,
+        284,
+        285,
+        286
+      ],
+      &quot;reason&quot;: &quot;Long/high-entropy DNS labels observed (len≥25, entropy≥3.6).&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Large Packet&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;length&quot;: 1242,
+      &quot;protocol&quot;: &quot;UDP&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Large Packet&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;length&quot;: 1242,
+      &quot;protocol&quot;: &quot;UDP&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Large Packet&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;length&quot;: 1242,
+      &quot;protocol&quot;: &quot;UDP&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Large Packet&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;length&quot;: 1242,
+      &quot;protocol&quot;: &quot;UDP&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Large Packet&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;length&quot;: 1242,
+      &quot;protocol&quot;: &quot;UDP&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Large Packet&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;length&quot;: 1242,
+      &quot;protocol&quot;: &quot;UDP&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Large Packet&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;length&quot;: 1242,
+      &quot;protocol&quot;: &quot;UDP&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Large Packet&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;length&quot;: 1242,
+      &quot;protocol&quot;: &quot;UDP&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Large Packet&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;length&quot;: 1242,
+      &quot;protocol&quot;: &quot;UDP&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Large Packet&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;length&quot;: 1242,
+      &quot;protocol&quot;: &quot;UDP&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Large Packet&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;length&quot;: 1242,
+      &quot;protocol&quot;: &quot;UDP&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Large Packet&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;length&quot;: 1242,
+      &quot;protocol&quot;: &quot;UDP&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Large Packet&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;length&quot;: 1242,
+      &quot;protocol&quot;: &quot;UDP&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Large Packet&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;length&quot;: 1242,
+      &quot;protocol&quot;: &quot;UDP&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Large Packet&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;length&quot;: 1242,
+      &quot;protocol&quot;: &quot;UDP&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Large Packet&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;length&quot;: 1242,
+      &quot;protocol&quot;: &quot;UDP&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Large Packet&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;length&quot;: 1242,
+      &quot;protocol&quot;: &quot;UDP&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Large Packet&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;length&quot;: 1242,
+      &quot;protocol&quot;: &quot;UDP&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Large Packet&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;length&quot;: 1242,
+      &quot;protocol&quot;: &quot;UDP&quot;
+    },
+    {
+      &quot;alert_type&quot;: &quot;Large Packet&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;src_ip&quot;: &quot;192.168.1.10&quot;,
+      &quot;dst_ip&quot;: &quot;203.0.113.50&quot;,
+      &quot;length&quot;: 1242,
+      &quot;protocol&quot;: &quot;UDP&quot;
+    }
+  ],
+  &quot;generated_at_utc&quot;: &quot;2026-03-19T02:57:42Z&quot;
+}</pre>
+</body>
+</html>

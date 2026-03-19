@@ -1,6 +1,11 @@
 import os
 import tempfile
 import time
+import json
+import platform
+import traceback
+import zipfile
+from io import BytesIO
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
@@ -13,15 +18,29 @@ from detectors import (
     reconstruct_sessions,
     get_traffic_summary,
     detect_port_scanning,
+    detect_port_scanning_rate,
     detect_arp_spoofing,
     detect_ddos,
+    detect_syn_flood_rate,
     detect_beaconing,
     detect_unusual_outbound_connections,
+    detect_rare_outbound_destinations,
     detect_data_exfiltration,
+    detect_dns_anomalies,
     detect_icmp_flood,
     detect_large_packets,
     detect_icmp_sweep,
 )
+
+from evidence_store import (
+    EvidenceStore,
+    create_case_paths,
+    safe_filename,
+    sha256_bytes,
+    write_bytes_artifact,
+    write_text_artifact,
+)
+from reporting import build_report_json, build_report_html
 
 st.set_page_config(page_title="NetSleuth IR", layout="wide")
 
@@ -62,6 +81,25 @@ st.markdown(
 
 st.title("NetSleuth IR")
 st.subheader("Incident Response Packet Analyzer")
+
+def dataframe_safe(obj):
+    """
+    Streamlit's dataframe renderer can choke on list/dict cells.
+    Convert those to compact JSON strings for display/export.
+    """
+    try:
+        df = obj if isinstance(obj, pd.DataFrame) else pd.DataFrame(obj)
+    except Exception:
+        return pd.DataFrame()
+
+    out = df.copy()
+    for col in out.columns:
+        out[col] = out[col].apply(
+            lambda v: json.dumps(v, ensure_ascii=False)
+            if isinstance(v, (dict, list))
+            else v
+        )
+    return out
 
 
 # ──────────────────────────────────────────────
@@ -195,8 +233,24 @@ def enrich_alert_severity(alert):
 def run_detection_pipeline(df, arp_records):
     findings = []
     findings.extend(detect_port_scanning(df, port_threshold=5))
+    findings.extend(
+        detect_port_scanning_rate(
+            df,
+            unique_ports_threshold=20,
+            ports_per_min_threshold=60.0,
+            window_seconds=60.0,
+        )
+    )
     findings.extend(detect_arp_spoofing(arp_records))
     findings.extend(detect_ddos(df, source_threshold=20, packet_threshold=50))
+    findings.extend(
+        detect_syn_flood_rate(
+            df,
+            syn_per_sec_threshold=30.0,
+            unique_src_threshold=10,
+            window_seconds=10.0,
+        )
+    )
     findings.extend(detect_beaconing(df, min_connections=4, interval_tolerance=2.0))
     findings.extend(
         detect_unusual_outbound_connections(
@@ -205,7 +259,9 @@ def run_detection_pipeline(df, arp_records):
             packet_threshold=5,
         )
     )
+    findings.extend(detect_rare_outbound_destinations(df, min_packets=8))
     findings.extend(detect_data_exfiltration(df, byte_threshold=10000))
+    findings.extend(detect_dns_anomalies(df))
     findings.extend(detect_icmp_flood(df, icmp_threshold=3))
     findings.extend(detect_icmp_sweep(df, target_threshold=5))
     findings.extend(detect_large_packets(df, size_threshold=1000))
@@ -376,7 +432,92 @@ def render_findings_charts(findings):
         plt.close(fig_leg)
 
 
-def analyze_packets(packets):
+def render_timeline_chart(findings):
+    findings_df = pd.DataFrame(findings)
+    if findings_df.empty:
+        return
+
+    ts_col = None
+    for c in ("first_seen_ts", "first_seen", "timestamp"):
+        if c in findings_df.columns:
+            ts_col = c
+            break
+    if not ts_col:
+        return
+
+    ts = pd.to_numeric(findings_df[ts_col], errors="coerce").dropna()
+    if ts.empty:
+        return
+
+    bucket = (ts // 10) * 10  # 10-second buckets
+    counts = bucket.value_counts().sort_index()
+
+    fig, ax = plt.subplots(figsize=(8, 2.8))
+    ax.plot(counts.index.astype(float), counts.values, color="#6a1b9a", linewidth=2)
+    ax.set_title("Alert Timeline (10s buckets)")
+    ax.set_xlabel("Unix time bucket")
+    ax.set_ylabel("Alert count")
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    st.pyplot(fig)
+    plt.close(fig)
+
+
+def render_network_graph(df, findings, max_nodes=30):
+    try:
+        import networkx as nx
+    except Exception:
+        st.caption("Network graph requires optional dependency `networkx`.")
+        return
+
+    if df is None or df.empty:
+        return
+
+    flows = df[(df["src_ip"] != "N/A") & (df["dst_ip"] != "N/A")].copy()
+    if flows.empty:
+        return
+
+    top = (
+        flows.groupby(["src_ip", "dst_ip"])
+        .size()
+        .reset_index(name="count")
+        .sort_values("count", ascending=False)
+        .head(200)
+    )
+
+    G = nx.DiGraph()
+    for _, r in top.iterrows():
+        G.add_edge(r["src_ip"], r["dst_ip"], weight=int(r["count"]))
+
+    alerted = set()
+    for f in (findings or []):
+        s = f.get("src_ip") or f.get("ip")
+        d = f.get("dst_ip")
+        if s and s != "N/A":
+            alerted.add(str(s))
+        if d and d != "N/A":
+            alerted.add(str(d))
+
+    nodes = list(G.nodes())
+    if len(nodes) > int(max_nodes):
+        deg = sorted(((n, G.degree(n)) for n in nodes), key=lambda x: x[1], reverse=True)[: int(max_nodes)]
+        keep = {n for n, _ in deg}
+        G = G.subgraph(keep).copy()
+
+    pos = nx.spring_layout(G, seed=7, k=0.9)
+    fig, ax = plt.subplots(figsize=(9, 5))
+    node_colors = ["#c62828" if n in alerted else "#1565c0" for n in G.nodes()]
+    nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=600, ax=ax, alpha=0.9)
+    nx.draw_networkx_labels(G, pos, font_size=8, ax=ax)
+    nx.draw_networkx_edges(G, pos, arrows=True, arrowstyle="-|>", arrowsize=12, width=1, alpha=0.35, ax=ax)
+    ax.set_title("Network Graph (top flows; red = involved in alerts)")
+    ax.axis("off")
+    plt.tight_layout()
+    st.pyplot(fig)
+    plt.close(fig)
+
+
+def analyze_packets(packets, *, evidence_ctx=None):
     packet_rows, arp_records = parse_pcap_packets(packets)
     base_df = pd.DataFrame(packet_rows)
     df, sessions_df = reconstruct_sessions(base_df, inactivity_timeout=60.0)
@@ -480,20 +621,36 @@ def analyze_packets(packets):
     st.markdown("## Detection Results")
 
     portscan_results  = detect_port_scanning(df, port_threshold=5)
+    portscan_rate_results = detect_port_scanning_rate(
+        df,
+        unique_ports_threshold=20,
+        ports_per_min_threshold=60.0,
+        window_seconds=60.0,
+    )
     arp_results       = detect_arp_spoofing(arp_records)
     ddos_results      = detect_ddos(df, source_threshold=20, packet_threshold=50)
+    synrate_results   = detect_syn_flood_rate(
+        df,
+        syn_per_sec_threshold=30.0,
+        unique_src_threshold=10,
+        window_seconds=10.0,
+    )
     beacon_results    = detect_beaconing(df, min_connections=4, interval_tolerance=2.0)
     outbound_results  = detect_unusual_outbound_connections(df, external_host_threshold=3, packet_threshold=5)
+    rare_outbound_results = detect_rare_outbound_destinations(df, min_packets=8)
     exfil_results     = detect_data_exfiltration(df, byte_threshold=10000)
+    dns_anom_results  = detect_dns_anomalies(df)
     icmp_results      = detect_icmp_flood(df, icmp_threshold=3)
     icmp_sweep_results = detect_icmp_sweep(df, target_threshold=5)
     large_packet_results = detect_large_packets(df, size_threshold=1000)
 
-    # Apply FIX 2 severity enrichment to each detector's results
     portscan_results     = [enrich_alert_severity(r) for r in portscan_results]
+    portscan_rate_results = [enrich_alert_severity(r) for r in portscan_rate_results]
     ddos_results         = [enrich_alert_severity(r) for r in ddos_results]
+    synrate_results      = [enrich_alert_severity(r) for r in synrate_results]
     exfil_results        = [enrich_alert_severity(r) for r in exfil_results]
     icmp_results         = [enrich_alert_severity(r) for r in icmp_results]
+    dns_anom_results     = [enrich_alert_severity(r) for r in dns_anom_results]
 
     findings = []
 
@@ -505,8 +662,19 @@ def analyze_packets(packets):
         "Detected: Possible port scanning activity found.",
     )
     if portscan_results:
-        st.dataframe(pd.DataFrame(portscan_results), use_container_width=True)
+        st.dataframe(dataframe_safe(portscan_results), use_container_width=True)
         findings.extend(portscan_results)
+
+    # Port Scan (Rate-Based)
+    show_status(
+        "Port Scan Detection (Rate-Based)",
+        bool(portscan_rate_results),
+        "Clear: No high-rate scanning bursts detected.",
+        "Detected: High-rate scanning burst(s) detected.",
+    )
+    if portscan_rate_results:
+        st.dataframe(dataframe_safe(portscan_rate_results), use_container_width=True)
+        findings.extend(portscan_rate_results)
 
     # ARP Spoofing
     show_status(
@@ -516,7 +684,7 @@ def analyze_packets(packets):
         "Detected: Possible ARP spoofing activity found.",
     )
     if arp_results:
-        st.dataframe(pd.DataFrame(arp_results), use_container_width=True)
+        st.dataframe(dataframe_safe(arp_results), use_container_width=True)
         findings.extend(arp_results)
 
     # DDoS
@@ -527,8 +695,19 @@ def analyze_packets(packets):
         "Detected: Possible DDoS-like traffic found.",
     )
     if ddos_results:
-        st.dataframe(pd.DataFrame(ddos_results), use_container_width=True)
+        st.dataframe(dataframe_safe(ddos_results), use_container_width=True)
         findings.extend(ddos_results)
+
+    # SYN Flood (Rate-Based)
+    show_status(
+        "SYN Flood Detection (Rate-Based)",
+        bool(synrate_results),
+        "Clear: No high-rate SYN flood bursts detected.",
+        "Detected: High-rate SYN flood burst(s) detected.",
+    )
+    if synrate_results:
+        st.dataframe(dataframe_safe(synrate_results), use_container_width=True)
+        findings.extend(synrate_results)
 
     # Beaconing
     show_status(
@@ -538,7 +717,7 @@ def analyze_packets(packets):
         "Detected: Possible beaconing activity found.",
     )
     if beacon_results:
-        st.dataframe(pd.DataFrame(beacon_results), use_container_width=True)
+        st.dataframe(dataframe_safe(beacon_results), use_container_width=True)
         findings.extend(beacon_results)
 
     # Unusual Outbound
@@ -549,8 +728,19 @@ def analyze_packets(packets):
         "Detected: Possible unusual outbound connections found.",
     )
     if outbound_results:
-        st.dataframe(pd.DataFrame(outbound_results), use_container_width=True)
+        st.dataframe(dataframe_safe(outbound_results), use_container_width=True)
         findings.extend(outbound_results)
+
+    # Rare Outbound Destinations
+    show_status(
+        "Rare Outbound Destination (Heuristic)",
+        bool(rare_outbound_results),
+        "Clear: No rare outbound destinations flagged.",
+        "Detected: Rare outbound destination(s) flagged.",
+    )
+    if rare_outbound_results:
+        st.dataframe(dataframe_safe(rare_outbound_results), use_container_width=True)
+        findings.extend(rare_outbound_results)
 
     # Data Exfiltration
     show_status(
@@ -560,8 +750,19 @@ def analyze_packets(packets):
         "Detected: Possible data exfiltration activity found.",
     )
     if exfil_results:
-        st.dataframe(pd.DataFrame(exfil_results), use_container_width=True)
+        st.dataframe(dataframe_safe(exfil_results), use_container_width=True)
         findings.extend(exfil_results)
+
+    # DNS anomalies
+    show_status(
+        "DNS Anomaly / Tunneling Heuristics",
+        bool(dns_anom_results),
+        "Clear: No DNS anomalies detected by current heuristics.",
+        "Detected: DNS anomalies detected (possible tunneling/abuse).",
+    )
+    if dns_anom_results:
+        st.dataframe(dataframe_safe(dns_anom_results), use_container_width=True)
+        findings.extend(dns_anom_results)
 
     # ICMP Flood
     show_status(
@@ -571,7 +772,7 @@ def analyze_packets(packets):
         "Detected: Possible ICMP flood activity found.",
     )
     if icmp_results:
-        st.dataframe(pd.DataFrame(icmp_results), use_container_width=True)
+        st.dataframe(dataframe_safe(icmp_results), use_container_width=True)
         findings.extend(icmp_results)
 
     # ICMP Sweep
@@ -582,7 +783,7 @@ def analyze_packets(packets):
         "Detected: Possible ICMP sweep activity found.",
     )
     if icmp_sweep_results:
-        st.dataframe(pd.DataFrame(icmp_sweep_results), use_container_width=True)
+        st.dataframe(dataframe_safe(icmp_sweep_results), use_container_width=True)
         findings.extend(icmp_sweep_results)
 
     # Large Packets
@@ -593,24 +794,142 @@ def analyze_packets(packets):
         "Detected: Large packets found.",
     )
     if large_packet_results:
-        st.dataframe(pd.DataFrame(large_packet_results[:20]), use_container_width=True)
+        st.dataframe(dataframe_safe(large_packet_results[:20]), use_container_width=True)
         findings.extend(large_packet_results)
 
-    # ── FIX 3: Findings visualization charts (before the raw table) ──
+    # Findings visualization charts 
     if findings:
         render_findings_charts(findings)
+        st.markdown("### Timeline & Network Views")
+        view_left, view_right = st.columns(2)
+        with view_left:
+            render_timeline_chart(findings)
+        with view_right:
+            render_network_graph(df, findings, max_nodes=30)
 
     st.markdown("## Findings Report")
     if findings:
         findings_df = pd.DataFrame(findings)
-        st.dataframe(findings_df, use_container_width=True)
-        csv = findings_df.to_csv(index=False).encode("utf-8")
+        findings_df_display = dataframe_safe(findings_df)
+        st.dataframe(findings_df_display, use_container_width=True)
+        csv = findings_df_display.to_csv(index=False).encode("utf-8")
         st.download_button(
             label="Download Findings Report as CSV",
             data=csv,
             file_name="netsleuth_findings_report.csv",
             mime="text/csv",
         )
+        if evidence_ctx and evidence_ctx.get("enabled") and evidence_ctx.get("store"):
+            store: EvidenceStore = evidence_ctx["store"]
+            run_id = evidence_ctx["run_id"]
+            paths = evidence_ctx["paths"]
+            input_meta = evidence_ctx.get("input_meta", {})
+            report_config = evidence_ctx.get("config_snapshot", {})
+
+            for a in findings:
+                pkt_nos = a.get("evidence_packet_nos") or []
+                store.add_alert(
+                    run_id,
+                    a,
+                    packet_nos=pkt_nos,
+                    session_ids=a.get("evidence_session_ids") or [],
+                )
+
+            report_json = build_report_json(
+                run_id=run_id,
+                run_meta=evidence_ctx.get("run_meta", {}),
+                input_meta=input_meta,
+                config=report_config,
+                traffic_summary=summary,
+                findings=findings,
+            )
+
+            report_json_path = os.path.join(paths.case_dir, "report.json")
+            report_html_path = os.path.join(paths.case_dir, "report.html")
+
+            # Export a couple of portable PNGs for the HTML report
+            chart_paths = []
+            try:
+                sev_counts = findings_df["severity"].value_counts()
+                ordered = [s for s in SEVERITY_ORDER if s in sev_counts.index]
+                values = [sev_counts[s] for s in ordered]
+                colors = [SEVERITY_COLORS.get(s, "#888") for s in ordered]
+                fig, ax = plt.subplots(figsize=(6, 3))
+                bars = ax.bar(ordered, values, color=colors, width=0.6)
+                ax.bar_label(bars, padding=3, fontsize=9)
+                ax.set_title("Alerts by Severity")
+                ax.set_ylabel("Count")
+                ax.spines[["top", "right"]].set_visible(False)
+                plt.tight_layout()
+                p = os.path.join(paths.artifacts_dir, "alerts_by_severity.png")
+                fig.savefig(p, dpi=140)
+                plt.close(fig)
+                chart_paths.append(p)
+                store.add_artifact(run_id, "chart_png", p, sha256=sha256_bytes(open(p, "rb").read()))
+            except Exception:
+                pass
+
+            try:
+                ts_col = "first_seen_ts" if "first_seen_ts" in findings_df.columns else ("first_seen" if "first_seen" in findings_df.columns else None)
+                if ts_col:
+                    ts = pd.to_numeric(findings_df[ts_col], errors="coerce").dropna()
+                    if not ts.empty:
+                        bucket = (ts // 10) * 10
+                        counts = bucket.value_counts().sort_index()
+                        fig, ax = plt.subplots(figsize=(8, 3))
+                        ax.plot(counts.index.astype(float), counts.values, color="#6a1b9a", linewidth=2)
+                        ax.set_title("Alert Timeline (10s buckets)")
+                        ax.set_xlabel("Unix time bucket")
+                        ax.set_ylabel("Alert count")
+                        ax.grid(True, alpha=0.3)
+                        plt.tight_layout()
+                        p = os.path.join(paths.artifacts_dir, "alert_timeline.png")
+                        fig.savefig(p, dpi=140)
+                        plt.close(fig)
+                        chart_paths.append(p)
+                        store.add_artifact(run_id, "chart_png", p, sha256=sha256_bytes(open(p, "rb").read()))
+            except Exception:
+                pass
+
+            report_html = build_report_html(run_id=run_id, report_json=report_json, chart_paths=chart_paths)
+            store.add_artifact(
+                run_id,
+                "report_json",
+                report_json_path,
+                sha256=write_text_artifact(report_json_path, json.dumps(report_json, indent=2, ensure_ascii=False)),
+            )
+            store.add_artifact(
+                run_id,
+                "report_html",
+                report_html_path,
+                sha256=write_text_artifact(report_html_path, report_html),
+            )
+
+            zip_buf = BytesIO()
+            with zipfile.ZipFile(zip_buf, "w", compression=zipfile.ZIP_DEFLATED) as z:
+                z.write(paths.db_path, arcname="case.db")
+                if os.path.exists(report_json_path):
+                    z.write(report_json_path, arcname="report.json")
+                if os.path.exists(report_html_path):
+                    z.write(report_html_path, arcname="report.html")
+                for root, _, files in os.walk(paths.artifacts_dir):
+                    for fn in files:
+                        full = os.path.join(root, fn)
+                        rel = os.path.relpath(full, paths.case_dir)
+                        z.write(full, arcname=rel)
+                saved_pcap_path = input_meta.get("saved_pcap_path")
+                if saved_pcap_path and os.path.exists(saved_pcap_path):
+                    z.write(saved_pcap_path, arcname=os.path.basename(saved_pcap_path))
+
+            zip_bytes = zip_buf.getvalue()
+            st.markdown("### Case Bundle (Evidence)")
+            st.caption(f"Saved to: {paths.case_dir}")
+            st.download_button(
+                label="Download Case Bundle (ZIP)",
+                data=zip_bytes,
+                file_name=f"netsleuth_case_{run_id}.zip",
+                mime="application/zip",
+            )
     else:
         st.markdown(
             "<div class='status-box status-clear'>Overall Status: No suspicious activity detected using current rules.</div>",
@@ -618,7 +937,6 @@ def analyze_packets(packets):
         )
 
     st.markdown("## Parsed Packet Data")
-    # FIX 1 applied: human-readable timestamps in parsed packet table
     st.dataframe(humanize_timestamps(df).head(200), use_container_width=True)
 
     st.markdown("## Investigation Tools")
@@ -678,7 +996,6 @@ def analyze_packets(packets):
         )
 
         st.write(f"Matching packets: {len(searched_df)}")
-        # FIX 1 applied: human-readable timestamps in search results
         st.dataframe(humanize_timestamps(searched_df).head(500), use_container_width=True)
 
     with st.expander("Payload Inspection", expanded=False):
@@ -744,8 +1061,7 @@ def analyze_packets(packets):
             stream_payload_rows = stream_df[stream_df["payload_size"] > 0][
                 ["packet_no", "timestamp", "src_ip", "src_port", "dst_ip", "dst_port", "payload_text"]
             ].copy()
-
-            # FIX 1: human-readable timestamps in stream view
+ 
             stream_payload_rows["timestamp"] = stream_payload_rows["timestamp"].apply(format_timestamp)
 
             if stream_payload_rows.empty:
@@ -788,6 +1104,7 @@ input_mode = st.radio(
 )
 
 packets_to_analyze = None
+evidence_ctx = None
 
 if input_mode == "Upload PCAP":
     uploaded_file = st.file_uploader(
@@ -800,8 +1117,21 @@ if input_mode == "Upload PCAP":
         st.write("Filename:", uploaded_file.name)
         st.write("File size:", uploaded_file.size, "bytes")
 
+        st.markdown("### Evidence / Case Logging")
+        ev_enabled = st.checkbox("Enable case evidence logging (SQLite + reports)", value=True)
+        ev_case_name = st.text_input("Case name", value="netsleuth_case")
+        ev_analyst = st.text_input(
+            "Analyst",
+            value=os.environ.get("USERNAME", "") or os.environ.get("USER", "") or "",
+        )
+        ev_notes = st.text_area("Notes (optional)", value="", height=80)
+
+        uploaded_bytes = uploaded_file.read()
+        uploaded_sha256 = sha256_bytes(uploaded_bytes) if uploaded_bytes else None
+        st.caption(f"PCAP SHA-256: {uploaded_sha256 or 'N/A'}")
+
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pcap") as tmp:
-            tmp.write(uploaded_file.read())
+            tmp.write(uploaded_bytes)
             tmp_path = tmp.name
 
         try:
@@ -857,6 +1187,15 @@ else:
     )
 
     save_capture = st.checkbox("Save captured packets for download", value=True)
+
+    st.markdown("### Evidence / Case Logging")
+    ev_enabled = st.checkbox("Enable case evidence logging (SQLite + reports)", value=True)
+    ev_case_name = st.text_input("Case name", value="netsleuth_case")
+    ev_analyst = st.text_input(
+        "Analyst",
+        value=os.environ.get("USERNAME", "") or os.environ.get("USER", "") or "",
+    )
+    ev_notes = st.text_area("Notes (optional)", value="", height=80)
 
     if st.button("Start Live Capture", type="primary"):
         if not interfaces:
@@ -1043,6 +1382,101 @@ else:
 
 if packets_to_analyze is not None:
     try:
-        analyze_packets(packets_to_analyze)
+        run_id = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+
+        paths = create_case_paths(
+            base_dir=os.path.join(os.getcwd(), "cases"),
+            case_name=ev_case_name if "ev_case_name" in locals() else "netsleuth_case",
+            run_id=run_id,
+        ) if ("ev_enabled" in locals() and ev_enabled) else None
+        store = EvidenceStore(paths.db_path) if paths else None
+
+        input_meta = {}
+        if input_mode == "Upload PCAP":
+            input_meta = {
+                "source_type": "upload",
+                "original_name": uploaded_file.name if "uploaded_file" in locals() and uploaded_file else None,
+                "size_bytes": int(uploaded_file.size) if "uploaded_file" in locals() and uploaded_file else None,
+                "sha256": uploaded_sha256 if "uploaded_sha256" in locals() else None,
+            }
+        else:
+            input_meta = {
+                "source_type": "live",
+                "capture_interface": st.session_state.get("captured_meta", {}).get("interface"),
+                "capture_filter": st.session_state.get("captured_meta", {}).get("filter"),
+                "capture_seconds": st.session_state.get("captured_meta", {}).get("seconds"),
+                "packet_count": st.session_state.get("captured_meta", {}).get("packet_count"),
+                "sha256": sha256_bytes(st.session_state["captured_pcap_bytes"]) if st.session_state.get("captured_pcap_bytes") else None,
+            }
+
+        config_snapshot = {
+            "detectors": {
+                "port_scanning": {"unique_ports_threshold": 5},
+                "port_scanning_rate": {"unique_ports_threshold": 20, "ports_per_min_threshold": 60.0, "window_seconds": 60.0},
+                "ddos_syn_total": {"source_threshold": 20, "packet_threshold": 50},
+                "syn_flood_rate": {"syn_per_sec_threshold": 30.0, "unique_src_threshold": 10, "window_seconds": 10.0},
+                "beaconing": {"min_connections": 4, "interval_tolerance": 2.0},
+                "unusual_outbound": {"external_host_threshold": 3, "packet_threshold": 5},
+                "rare_outbound": {"min_packets": 8},
+                "data_exfil": {"byte_threshold": 10000},
+                "dns_anomalies": {},
+                "icmp_flood": {"icmp_threshold": 3},
+                "icmp_sweep": {"target_threshold": 5},
+                "large_packets": {"size_threshold": 1000},
+            }
+        }
+
+        if store:
+            store.create_run(
+                run_id,
+                tool_name="NetSleuth IR",
+                tool_version="1.0",
+                analyst=ev_analyst if "ev_analyst" in locals() else None,
+                notes=ev_notes if "ev_notes" in locals() else None,
+                mode=input_mode,
+            )
+            store.set_config(run_id, "detector_thresholds", config_snapshot)
+
+            saved_pcap_path = None
+            if input_mode == "Upload PCAP" and "uploaded_bytes" in locals() and uploaded_bytes:
+                saved_pcap_path = os.path.join(
+                    paths.case_dir,
+                    f"input_{safe_filename(uploaded_file.name if uploaded_file else 'upload.pcap')}",
+                )
+                write_bytes_artifact(saved_pcap_path, uploaded_bytes)
+                store.add_artifact(run_id, "pcap", saved_pcap_path, sha256=sha256_bytes(uploaded_bytes))
+            elif input_mode != "Upload PCAP" and st.session_state.get("captured_pcap_bytes"):
+                saved_pcap_path = os.path.join(paths.case_dir, "input_live_capture.pcap")
+                write_bytes_artifact(saved_pcap_path, st.session_state["captured_pcap_bytes"])
+                store.add_artifact(
+                    run_id,
+                    "pcap",
+                    saved_pcap_path,
+                    sha256=sha256_bytes(st.session_state["captured_pcap_bytes"]),
+                )
+
+            input_meta["saved_pcap_path"] = saved_pcap_path
+            store.add_input(run_id, **input_meta)
+
+            evidence_ctx = {
+                "enabled": True,
+                "run_id": run_id,
+                "paths": paths,
+                "store": store,
+                "input_meta": input_meta,
+                "run_meta": {
+                    "analyst": ev_analyst if "ev_analyst" in locals() else None,
+                    "notes": ev_notes if "ev_notes" in locals() else None,
+                    "host": platform.node(),
+                    "platform": platform.platform(),
+                },
+                "config_snapshot": config_snapshot,
+            }
+
+        analyze_packets(packets_to_analyze, evidence_ctx=evidence_ctx)
+
+        if store:
+            store.close()
     except Exception as e:
         st.error(f"Error analyzing traffic: {e}")
+        st.code(traceback.format_exc())
