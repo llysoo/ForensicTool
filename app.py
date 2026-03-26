@@ -42,7 +42,7 @@ from evidence_store import (
 )
 from reporting import build_report_json, build_report_html
 
-st.set_page_config(page_title="NetSleuth IR", layout="wide")
+st.set_page_config(page_title="WireWatch", layout="wide")
 
 # ---------- Custom CSS ----------
 st.markdown(
@@ -79,7 +79,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.title("NetSleuth IR")
+st.title("WireWatch")
 st.subheader("Incident Response Packet Analyzer")
 
 def dataframe_safe(obj):
@@ -816,7 +816,7 @@ def analyze_packets(packets, *, evidence_ctx=None):
         st.download_button(
             label="Download Findings Report as CSV",
             data=csv,
-            file_name="netsleuth_findings_report.csv",
+            file_name="wirewatch_findings_report.csv",
             mime="text/csv",
         )
         if evidence_ctx and evidence_ctx.get("enabled") and evidence_ctx.get("store"):
@@ -927,7 +927,7 @@ def analyze_packets(packets, *, evidence_ctx=None):
             st.download_button(
                 label="Download Case Bundle (ZIP)",
                 data=zip_bytes,
-                file_name=f"netsleuth_case_{run_id}.zip",
+                file_name=f"wirewatch_case_{run_id}.zip",
                 mime="application/zip",
             )
     else:
@@ -1119,7 +1119,7 @@ if input_mode == "Upload PCAP":
 
         st.markdown("### Evidence / Case Logging")
         ev_enabled = st.checkbox("Enable case evidence logging (SQLite + reports)", value=True)
-        ev_case_name = st.text_input("Case name", value="netsleuth_case")
+        ev_case_name = st.text_input("Case name", value="wirewatch_case")
         ev_analyst = st.text_input(
             "Analyst",
             value=os.environ.get("USERNAME", "") or os.environ.get("USER", "") or "",
@@ -1190,7 +1190,7 @@ else:
 
     st.markdown("### Evidence / Case Logging")
     ev_enabled = st.checkbox("Enable case evidence logging (SQLite + reports)", value=True)
-    ev_case_name = st.text_input("Case name", value="netsleuth_case")
+    ev_case_name = st.text_input("Case name", value="wirewatch_case")
     ev_analyst = st.text_input(
         "Analyst",
         value=os.environ.get("USERNAME", "") or os.environ.get("USER", "") or "",
@@ -1251,7 +1251,7 @@ else:
             st.download_button(
                 label="Download Captured PCAP",
                 data=st.session_state["captured_pcap_bytes"],
-                file_name="netsleuth_live_capture.pcap",
+                file_name="wirewatch_live_capture.pcap",
                 mime="application/vnd.tcpdump.pcap",
             )
         packets_to_analyze = st.session_state["captured_packets"]
@@ -1386,7 +1386,7 @@ if packets_to_analyze is not None:
 
         paths = create_case_paths(
             base_dir=os.path.join(os.getcwd(), "cases"),
-            case_name=ev_case_name if "ev_case_name" in locals() else "netsleuth_case",
+            case_name=ev_case_name if "ev_case_name" in locals() else "wirewatch_case",
             run_id=run_id,
         ) if ("ev_enabled" in locals() and ev_enabled) else None
         store = EvidenceStore(paths.db_path) if paths else None
@@ -1429,7 +1429,7 @@ if packets_to_analyze is not None:
         if store:
             store.create_run(
                 run_id,
-                tool_name="NetSleuth IR",
+                tool_name="WireWatch",
                 tool_version="1.0",
                 analyst=ev_analyst if "ev_analyst" in locals() else None,
                 notes=ev_notes if "ev_notes" in locals() else None,

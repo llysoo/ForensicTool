@@ -164,7 +164,7 @@ class EvidenceStore:
     def create_run(
         self,
         run_id: str,
-        tool_name: str = "NetSleuth IR",
+        tool_name: str = "WireWatch",
         tool_version: Optional[str] = None,
         analyst: Optional[str] = None,
         notes: Optional[str] = None,

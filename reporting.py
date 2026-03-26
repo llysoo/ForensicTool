@@ -81,7 +81,7 @@ def build_report_html(
 <html>
 <head>
   <meta charset="utf-8"/>
-  <title>NetSleuth IR Report - {esc(run_id)}</title>
+  <title>WireWatch Report - {esc(run_id)}</title>
   <style>
     body {{ font-family: Arial, sans-serif; margin: 20px; color: #111; }}
     h1 {{ margin: 0 0 6px 0; }}
@@ -100,7 +100,7 @@ def build_report_html(
   </style>
 </head>
 <body>
-  <h1>NetSleuth IR Report</h1>
+  <h1>WireWatch Report</h1>
   <div class="meta">
     <div class="grid">
       <div class="kv"><span class="k">Run ID:</span> {esc(run_id)}</div>

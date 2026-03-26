@@ -84,6 +84,15 @@ def _extract_dns_label_features(q: str) -> dict:
     }
 
 
+def _is_syn_request_flag(flag_value) -> bool:
+    """
+    Treat only TCP SYN requests as SYN flood traffic.
+    Exclude SYN-ACK responses, which Scapy commonly renders as "SA".
+    """
+    flag_text = str(flag_value or "").upper()
+    return ("S" in flag_text) and ("A" not in flag_text)
+
+
 def parse_pcap_packets(packets):
     packets_data = []
     arp_records = []
@@ -449,7 +458,7 @@ def detect_port_scanning_rate(df, unique_ports_threshold=20, ports_per_min_thres
 
     suspicious = grouped[
         (grouped["unique_ports"] >= int(unique_ports_threshold))
-        | (grouped["ports_per_min"] >= float(ports_per_min_threshold))
+        & (grouped["ports_per_min"] >= float(ports_per_min_threshold))
     ]
 
     results = []
@@ -472,7 +481,11 @@ def detect_port_scanning_rate(df, unique_ports_threshold=20, ports_per_min_thres
                 "first_seen_ts": first_seen,
                 "last_seen_ts": last_seen,
                 "evidence_packet_nos": pkt_nos,
-                "reason": f"Unique ports={int(row['unique_ports'])}, Rate={round(float(row['ports_per_min']),2)}/min within ~{int(window_seconds)}s window.",
+                "reason": (
+                    f"Rapid multi-port targeting detected: {int(row['unique_ports'])} unique "
+                    f"destination ports at {round(float(row['ports_per_min']), 2)}/min "
+                    f"within ~{int(window_seconds)}s."
+                ),
             }
         )
     return results
@@ -517,7 +530,7 @@ def detect_ddos(df, source_threshold=20, packet_threshold=50):
     if tcp_df.empty:
         return []
 
-    syn_df = tcp_df[tcp_df["tcp_flags"].astype(str).str.contains("S")].copy()
+    syn_df = tcp_df[tcp_df["tcp_flags"].apply(_is_syn_request_flag)].copy()
 
     if syn_df.empty:
         return []
@@ -567,7 +580,7 @@ def detect_syn_flood_rate(df, syn_per_sec_threshold=30.0, unique_src_threshold=1
     ].copy()
     if tcp_df.empty:
         return []
-    syn_df = tcp_df[tcp_df["tcp_flags"].astype(str).str.contains("S")].copy()
+    syn_df = tcp_df[tcp_df["tcp_flags"].apply(_is_syn_request_flag)].copy()
     if syn_df.empty:
         return []
 
